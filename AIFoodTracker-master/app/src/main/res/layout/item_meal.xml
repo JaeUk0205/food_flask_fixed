@@ -1,0 +1,81 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.cardview.widget.CardView
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:layout_marginHorizontal="8dp"
+    android:layout_marginVertical="6dp"
+    app:cardCornerRadius="16dp"
+    app:cardElevation="4dp"
+    app:cardBackgroundColor="#F1FAF9"> <LinearLayout
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:orientation="vertical"
+    android:padding="16dp">
+
+    <RelativeLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginBottom="12dp">
+
+        <TextView
+            android:id="@+id/tv_meal_title"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="식사 1"
+            android:textSize="20sp"
+            android:textStyle="bold"
+            android:textColor="@color/text_color_primary"
+            android:layout_centerVertical="true"
+            android:layout_alignParentStart="true"/>
+
+        <androidx.appcompat.widget.AppCompatButton
+            android:id="@+id/btn_meal_detail"
+            android:layout_width="wrap_content"
+            android:layout_height="40dp"
+            android:text="상세보기"
+            android:textColor="@color/white"
+            android:background="@drawable/button_rounded"
+            android:layout_alignParentEnd="true"
+            android:layout_centerVertical="true"/>
+
+    </RelativeLayout>
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:gravity="end">
+
+        <ImageButton
+            android:id="@+id/btn_add_by_camera"
+            android:layout_width="48dp"
+            android:layout_height="48dp"
+            android:background="?attr/selectableItemBackgroundBorderless"
+            android:src="@android:drawable/ic_menu_camera"
+            app:tint="@color/primary_dark_color"
+            android:contentDescription="카메라로 추가"/>
+
+        <ImageButton
+            android:id="@+id/btn_add_by_gallery"
+            android:layout_width="48dp"
+            android:layout_height="48dp"
+            android:background="?attr/selectableItemBackgroundBorderless"
+            android:src="@android:drawable/ic_menu_gallery"
+            app:tint="@color/primary_dark_color"
+            android:contentDescription="갤러리로 추가"/>
+
+        <ImageButton
+            android:id="@+id/btn_add_by_search"
+            android:layout_width="48dp"
+            android:layout_height="48dp"
+            android:background="?attr/selectableItemBackgroundBorderless"
+            android:src="@android:drawable/ic_menu_search"
+            app:tint="@color/primary_dark_color"
+            android:contentDescription="검색으로 추가"/>
+
+    </LinearLayout>
+
+</LinearLayout>
+</androidx.cardview.widget.CardView>
