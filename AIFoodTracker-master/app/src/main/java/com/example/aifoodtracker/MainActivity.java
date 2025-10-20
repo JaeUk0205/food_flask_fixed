@@ -74,9 +74,9 @@ public class MainActivity extends AppCompatActivity {
             FoodResponse foodResponse = (FoodResponse) intent.getSerializableExtra("food_response");
 
             if (foodResponse != null) {
-                int carbGram = (int) foodResponse.getCarbohydrate();
-                int proteinGram = (int) foodResponse.getProtein();
-                int fatGram = (int) foodResponse.getFat();
+                int carbGram = (int) foodResponse.getNutritionInfo().getCarbohydrate();
+                int proteinGram = (int) foodResponse.getNutritionInfo().getProtein();
+                int fatGram = (int) foodResponse.getNutritionInfo().getFat();
                 updateNutritionProgress(carbGram, proteinGram, fatGram);
             } else {
                 updateNutritionProgress(150, 70, 45);

@@ -7,7 +7,7 @@ import retrofit2.converter.gson.GsonConverterFactory;
 
 public class RetrofitClient {
     // ⚠️ 중요: 이 주소를 실제 백엔드 서버 주소로 변경해야 합니다.
-    private static final String BASE_URL = "http://YOUR_SERVER_IP:8000/";
+    private static final String BASE_URL = "http://192.168.35.67:8000/";
 
     private static Retrofit retrofit = null;
 
