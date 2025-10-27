@@ -1,0 +1,132 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>API 테스트 페이지</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    <style>
+        body { padding: 2rem; }
+        .container { max-width: 800px; }
+        .card { margin-bottom: 2rem; }
+        pre {
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            padding: 1rem;
+            border-radius: .25rem;
+            white-space: pre-wrap;
+            word-wrap: break-word;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1 class="mb-4">🚀 Food4U API 테스트 페이지</h1>
+
+        <div class="card">
+            <div class="card-header">
+                <h4>📸 음식 사진 분석 테스트 (POST /v1/images)</h4>
+            </div>
+            <div class="card-body">
+                <form id="imageForm">
+                    <div class="mb-3">
+                        <label for="imageFile" class="form-label">분석할 음식 사진을 선택하세요:</label>
+                        <input class="form-control" type="file" id="imageFile" accept="image/*" required>
+                    </div>
+                    <button type="submit" class="btn btn-primary">분석 요청</button>
+                </form>
+                <h5 class="mt-4">응답 결과:</h5>
+                <pre><code id="imageResult">여기에 서버 응답이 표시됩니다.</code></pre>
+            </div>
+        </div>
+
+        <div class="card">
+            <div class="card-header">
+                <h4>⚖️ BMI 계산 테스트 (POST /v1/bmi)</h4>
+            </div>
+            <div class="card-body">
+                <form id="bmiForm">
+                    <div class="row g-3">
+                        <div class="col-sm-4">
+                            <input type="number" class="form-control" id="height" placeholder="키 (cm)" required>
+                        </div>
+                        <div class="col-sm-4">
+                            <input type="number" class="form-control" id="weight" placeholder="몸무게 (kg)" required>
+                        </div>
+                        <div class="col-sm-4">
+                            <select class="form-select" id="gender" required>
+                                <option value="male">남성</option>
+                                <option value="female">여성</option>
+                            </select>
+                        </div>
+                    </div>
+                    <button type="submit" class="btn btn-primary mt-3">BMI 계산 요청</button>
+                </form>
+                <h5 class="mt-4">응답 결과:</h5>
+                <pre><code id="bmiResult">여기에 서버 응답이 표시됩니다.</code></pre>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // 서버 주소 (app.py를 실행하는 주소와 포트)
+        const API_BASE_URL = 'http://127.0.0.1:8000';
+
+        // --- 음식 사진 분석 로직 ---
+        const imageForm = document.getElementById('imageForm');
+        const imageFile = document.getElementById('imageFile');
+        const imageResult = document.getElementById('imageResult');
+
+        imageForm.addEventListener('submit', async (event) => {
+            event.preventDefault(); // 폼의 기본 제출 동작을 막음
+            imageResult.textContent = '분석 중...';
+
+            const formData = new FormData();
+            formData.append('file', imageFile.files[0]);
+
+            try {
+                const response = await fetch(`${API_BASE_URL}/v1/images`, {
+                    method: 'POST',
+                    body: formData,
+                });
+                const data = await response.json();
+                imageResult.textContent = JSON.stringify(data, null, 2); // 결과를 예쁘게 포맷팅
+            } catch (error) {
+                console.error('Error:', error);
+                imageResult.textContent = '오류 발생! 서버가 켜져 있는지 확인하세요.';
+            }
+        });
+
+        // --- BMI 계산 로직 ---
+        const bmiForm = document.getElementById('bmiForm');
+        const heightInput = document.getElementById('height');
+        const weightInput = document.getElementById('weight');
+        const genderInput = document.getElementById('gender');
+        const bmiResult = document.getElementById('bmiResult');
+
+        bmiForm.addEventListener('submit', async (event) => {
+            event.preventDefault();
+            bmiResult.textContent = '계산 중...';
+
+            const bmiData = {
+                height: parseFloat(heightInput.value),
+                weight: parseFloat(weightInput.value),
+                gender: genderInput.value,
+            };
+
+            try {
+                const response = await fetch(`${API_BASE_URL}/v1/bmi`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(bmiData),
+                });
+                const data = await response.json();
+                bmiResult.textContent = JSON.stringify(data, null, 2);
+            } catch (error) {
+                console.error('Error:', error);
+                bmiResult.textContent = '오류 발생! 서버가 켜져 있는지 확인하세요.';
+            }
+        });
+    </script>
+</body>
+</html>
