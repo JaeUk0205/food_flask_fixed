@@ -14,6 +14,7 @@ import android.widget.Toast;
 import androidx.appcompat.app.AppCompatActivity;
 
 import com.example.aifoodtracker.domain.User;
+import com.example.aifoodtracker.utils.UserPreferenceManager; // ✅ UserPreferenceManager import 추가
 
 import java.util.UUID;
 
@@ -125,13 +126,16 @@ public class InitialSurveyActivity extends AppCompatActivity {
                     user.setWeight(weight);
                     user.setTargetCalories(targetCalories);
 
+                    // ✅ User 정보를 SharedPreferences에 저장
+                    UserPreferenceManager.saveUser(InitialSurveyActivity.this, user);
+
                     // ✅ 버튼 텍스트 변경
                     btn_start.setText("결과 확인 후 시작하기");
                     isResultShown = true;
 
                 } else {
-                    // ✅ 두 번째 클릭 → MainActivity 이동
-                    Intent intent = new Intent(InitialSurveyActivity.this, MainActivity.class);
+                    // 🚨 수정된 부분: 두 번째 클릭 → CameraActivity로 이동
+                    Intent intent = new Intent(InitialSurveyActivity.this, CameraActivity.class);
                     intent.putExtra("user_data", user);
                     startActivity(intent);
                     finish();
