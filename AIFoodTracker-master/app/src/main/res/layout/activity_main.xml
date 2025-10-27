@@ -5,71 +5,87 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
+    android:background="#FAFAFA"
     tools:context=".MainActivity">
 
     <ScrollView
         android:layout_width="match_parent"
         android:layout_height="0dp"
-        app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintTop_toTopOf="parent"
-        app:layout_constraintVertical_bias="1.0"
-        tools:layout_editor_absoluteX="-16dp">
+        app:layout_constraintBottom_toBottomOf="parent">
 
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:orientation="vertical"
-            android:padding="16dp">
+            android:padding="16dp"
+            android:gravity="center_horizontal">
 
+            <!-- 🔹 사용자 닉네임 -->
+            <TextView
+                android:id="@+id/tv_user_nickname"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="AIFoodTracker"
+                android:textColor="#212121"
+                android:textStyle="bold"
+                android:textSize="18sp"
+                android:layout_marginBottom="8dp"
+                android:fontFamily="sans-serif-medium" />
+
+            <!-- 🍱 분석된 음식명 표시 -->
             <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_marginBottom="16dp"
+                android:orientation="horizontal"
+                android:background="@drawable/border_green_xml"
+                android:padding="10dp"
                 android:gravity="center_vertical"
-                android:orientation="horizontal">
+                android:layout_marginBottom="16dp">
 
                 <ImageView
-                    android:id="@+id/iv_user_photo"
-                    android:layout_width="40dp"
-                    android:layout_height="40dp" />
-
-                <TextView
-                    android:id="@+id/tv_user_nickname"
-                    android:layout_width="0dp"
-                    android:layout_height="wrap_content"
-                    android:layout_marginStart="8dp"
-                    android:layout_weight="1"
-                    android:text="이준원"
-                    android:textSize="18sp"
-                    android:textStyle="bold" />
-
-                <ImageView
-                    android:id="@+id/iv_user_setting_update"
                     android:layout_width="24dp"
                     android:layout_height="24dp"
-                    android:src="@android:drawable/ic_menu_preferences" />
+                    android:src="@android:drawable/ic_menu_info_details"
+                    android:tint="#4CAF50"
+                    android:layout_marginEnd="8dp" />
 
+                <TextView
+                    android:id="@+id/tv_food_name"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="분석된 음식: -"
+                    android:textColor="#2E7D32"
+                    android:textStyle="bold"
+                    android:textSize="16sp"
+                    android:fontFamily="sans-serif"
+                    android:ellipsize="end"
+                    android:maxLines="1" />
             </LinearLayout>
 
+            <!-- 🔹 탄단지 + 목표 칼로리 ProgressBar 묶은 카드 -->
             <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_marginBottom="16dp"
-                android:background="@drawable/border_green_xml"
                 android:orientation="vertical"
-                android:padding="12dp">
+                android:background="@drawable/border_green_xml"
+                android:padding="12dp"
+                android:layout_marginBottom="16dp">
 
+                <!-- 목표 칼로리 -->
                 <LinearLayout
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:layout_marginBottom="4dp"
+                    android:orientation="horizontal"
                     android:gravity="center_vertical"
-                    android:orientation="horizontal">
+                    android:layout_marginBottom="6dp">
 
                     <TextView
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:text="총 칼로리: " />
+                        android:text="목표 칼로리:  "
+                        android:textStyle="bold"
+                        android:textColor="#000000" />
 
                     <ProgressBar
                         android:id="@+id/pb_total_calories"
@@ -77,27 +93,32 @@
                         android:layout_width="0dp"
                         android:layout_height="wrap_content"
                         android:layout_weight="1"
-                        android:progress="50" />
+                        android:progress="40"
+                        android:max="2500"
+                        android:progressTint="#4CAF50"
+                        android:backgroundTint="#E0E0E0" />
 
                     <TextView
                         android:id="@+id/tv_total_calories"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:layout_marginStart="8dp"
-                        android:text="1000 / 2000 kcal" />
+                        android:text="0 / 2000 kcal" />
                 </LinearLayout>
 
+                <!-- 탄수화물 -->
                 <LinearLayout
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:layout_marginBottom="4dp"
+                    android:orientation="horizontal"
                     android:gravity="center_vertical"
-                    android:orientation="horizontal">
+                    android:layout_marginBottom="6dp">
 
                     <TextView
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:text="탄수화물:  " />
+                        android:text="탄수화물:  "
+                        android:textColor="#000000" />
 
                     <ProgressBar
                         android:id="@+id/pb_carbohydrate"
@@ -105,7 +126,9 @@
                         android:layout_width="0dp"
                         android:layout_height="wrap_content"
                         android:layout_weight="1"
-                        android:progress="60" />
+                        android:progress="60"
+                        android:progressTint="#81C784"
+                        android:backgroundTint="#E0E0E0" />
 
                     <TextView
                         android:id="@+id/tv_gram_of_carbohydrate"
@@ -115,17 +138,19 @@
                         android:text="150 / 200 g" />
                 </LinearLayout>
 
+                <!-- 단백질 -->
                 <LinearLayout
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:layout_marginBottom="4dp"
+                    android:orientation="horizontal"
                     android:gravity="center_vertical"
-                    android:orientation="horizontal">
+                    android:layout_marginBottom="6dp">
 
                     <TextView
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:text="단백질:      " />
+                        android:text="단백질:      "
+                        android:textColor="#000000" />
 
                     <ProgressBar
                         android:id="@+id/pb_protein"
@@ -133,7 +158,9 @@
                         android:layout_width="0dp"
                         android:layout_height="wrap_content"
                         android:layout_weight="1"
-                        android:progress="80" />
+                        android:progress="80"
+                        android:progressTint="#66BB6A"
+                        android:backgroundTint="#E0E0E0" />
 
                     <TextView
                         android:id="@+id/tv_gram_of_protein"
@@ -143,16 +170,18 @@
                         android:text="80 / 100 g" />
                 </LinearLayout>
 
+                <!-- 지방 -->
                 <LinearLayout
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:gravity="center_vertical"
-                    android:orientation="horizontal">
+                    android:orientation="horizontal"
+                    android:gravity="center_vertical">
 
                     <TextView
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:text="지방:         " />
+                        android:text="지방:         "
+                        android:textColor="#000000" />
 
                     <ProgressBar
                         android:id="@+id/pb_fat"
@@ -160,7 +189,9 @@
                         android:layout_width="0dp"
                         android:layout_height="wrap_content"
                         android:layout_weight="1"
-                        android:progress="40" />
+                        android:progress="40"
+                        android:progressTint="#388E3C"
+                        android:backgroundTint="#E0E0E0" />
 
                     <TextView
                         android:id="@+id/tv_gram_of_fat"
@@ -169,9 +200,9 @@
                         android:layout_marginStart="8dp"
                         android:text="40 / 80 g" />
                 </LinearLayout>
-
             </LinearLayout>
 
+            <!-- 🔹 레이더 그래프 -->
             <com.github.mikephil.charting.charts.RadarChart
                 android:id="@+id/radarchart"
                 android:layout_width="match_parent"
@@ -179,13 +210,14 @@
                 android:layout_marginBottom="16dp"
                 android:padding="8dp" />
 
+            <!-- 🔹 식사 기록 -->
             <TextView
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:layout_marginBottom="8dp"
                 android:text="나의 식사 기록"
                 android:textSize="16sp"
-                android:textStyle="bold" />
+                android:textStyle="bold"
+                android:layout_marginBottom="8dp" />
 
             <androidx.recyclerview.widget.RecyclerView
                 android:id="@+id/rv_meal"
@@ -194,6 +226,7 @@
                 android:nestedScrollingEnabled="false"
                 tools:listitem="@layout/item_meal" />
 
+            <!-- 🔹 버튼 -->
             <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
@@ -205,16 +238,19 @@
                     android:id="@+id/btn_find_route"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:layout_marginStart="8dp"
-                    android:text="산책길 찾기"/>
+                    android:text="산책길 찾기"
+                    android:textColor="#FFFFFF"
+                    android:backgroundTint="#4CAF50"
+                    android:layout_marginEnd="8dp" />
 
                 <Button
-                    android:id="@+id/btn_recommend_meal"
+                    android:id="@+id/btn_open_camera"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:text="식단 추천" />
+                    android:text="음식 분석"
+                    android:textColor="#FFFFFF"
+                    android:backgroundTint="#66BB6A" />
             </LinearLayout>
-
         </LinearLayout>
     </ScrollView>
 
@@ -223,8 +259,9 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_margin="16dp"
+        android:src="@android:drawable/ic_input_add"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
-        android:src="@android:drawable/ic_input_add"/>
-
+        app:tint="#FFFFFF"
+        app:backgroundTint="#4CAF50"/>
 </androidx.constraintlayout.widget.ConstraintLayout>

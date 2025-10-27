@@ -1,3 +1,8 @@
 Flask>=3.0
 Flask-SQLAlchemy>=3.1
 Werkzeug>=3.0
+torch
+torchvision
+torchaudio
+Flask-Cors
+pandas

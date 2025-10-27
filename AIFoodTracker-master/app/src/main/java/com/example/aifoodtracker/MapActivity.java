@@ -1,77 +1,167 @@
 package com.example.aifoodtracker;
 
+import androidx.annotation.NonNull;
+import androidx.core.app.ActivityCompat;
+import androidx.core.content.ContextCompat;
+import androidx.fragment.app.FragmentActivity;
+
 import android.Manifest;
 import android.content.pm.PackageManager;
+import android.location.Location;
 import android.os.Bundle;
+import android.util.Log;
 import android.widget.Toast;
 
-import androidx.annotation.NonNull;
-import androidx.appcompat.app.AppCompatActivity;
-import androidx.core.app.ActivityCompat;
-import androidx.fragment.app.FragmentManager;
+import com.example.aifoodtracker.domain.WalkResponse;
+import com.example.aifoodtracker.domain.WalkRoute;
+import com.example.aifoodtracker.network.RetrofitAPI;
+import com.example.aifoodtracker.network.RetrofitClient;
+import com.google.android.gms.location.FusedLocationProviderClient;
+import com.google.android.gms.location.LocationCallback;
+import com.google.android.gms.location.LocationRequest;
+import com.google.android.gms.location.LocationResult;
+import com.google.android.gms.location.LocationServices;
+import com.google.android.gms.maps.CameraUpdateFactory;
+import com.google.android.gms.maps.GoogleMap;
+import com.google.android.gms.maps.OnMapReadyCallback;
+import com.google.android.gms.maps.SupportMapFragment;
+import com.google.android.gms.maps.model.LatLng;
+import com.google.android.gms.maps.model.Marker;
+import com.google.android.gms.maps.model.MarkerOptions;
 
-import com.naver.maps.map.LocationTrackingMode;
-import com.naver.maps.map.MapFragment;
-import com.naver.maps.map.NaverMap;
-import com.naver.maps.map.OnMapReadyCallback;
-import com.naver.maps.map.util.FusedLocationSource;
+import java.util.List;
 
-public class MapActivity extends AppCompatActivity implements OnMapReadyCallback {
+import retrofit2.Call;
+import retrofit2.Callback;
+import retrofit2.Response;
 
-    private static final int LOCATION_PERMISSION_REQUEST_CODE = 1000;
-    private FusedLocationSource locationSource;
-    private NaverMap naverMap;
+public class MapActivity extends FragmentActivity implements OnMapReadyCallback {
+
+    private GoogleMap mMap;
+    private FusedLocationProviderClient fusedLocationClient;
+    private static final int LOCATION_PERMISSION_REQUEST_CODE = 100;
+    private double foodCalories = 580.0; // AI 분석 결과에서 전달받을 값
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_map);
 
-        FragmentManager fm = getSupportFragmentManager();
-        MapFragment mapFragment = (MapFragment) fm.findFragmentById(R.id.map_fragment);
+        fusedLocationClient = LocationServices.getFusedLocationProviderClient(this);
+        SupportMapFragment mapFragment = (SupportMapFragment) getSupportFragmentManager()
+                .findFragmentById(R.id.map);
+        if (mapFragment != null) mapFragment.getMapAsync(this);
+    }
 
-        if (mapFragment == null) {
-            mapFragment = MapFragment.newInstance();
-            fm.beginTransaction().add(R.id.map_fragment, mapFragment).commit();
+    @Override
+    public void onMapReady(@NonNull GoogleMap googleMap) {
+        mMap = googleMap;
+        enableMyLocation();
+    }
+
+    private void enableMyLocation() {
+        if (ContextCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION)
+                == PackageManager.PERMISSION_GRANTED) {
+            mMap.setMyLocationEnabled(true);
+            startLocationUpdates();
+        } else {
+            ActivityCompat.requestPermissions(
+                    this,
+                    new String[]{Manifest.permission.ACCESS_FINE_LOCATION},
+                    LOCATION_PERMISSION_REQUEST_CODE
+            );
         }
-
-        mapFragment.getMapAsync(this);
-
-        // 1. 현재 위치를 가져오기 위한 FusedLocationSource 생성
-        locationSource = new FusedLocationSource(this, LOCATION_PERMISSION_REQUEST_CODE);
     }
 
-    @Override
-    public void onMapReady(@NonNull NaverMap naverMap) {
-        this.naverMap = naverMap;
-        // Map Design에서 생성한 커스텀 스타일 적용 (Map ID만 사용)
-        naverMap.setCustomStyleId("f1d23ae2-0dab-4128-b342-a70be64d07c7");
+    private void startLocationUpdates() {
+        try {
+            LocationRequest locationRequest = new LocationRequest.Builder(
+                    LocationRequest.PRIORITY_HIGH_ACCURACY, 4000
+            ).build();
 
+            fusedLocationClient.requestLocationUpdates(locationRequest, new LocationCallback() {
+                @Override
+                public void onLocationResult(@NonNull LocationResult locationResult) {
+                    Location location = locationResult.getLastLocation();
+                    if (location != null) {
+                        double lat = location.getLatitude();
+                        double lng = location.getLongitude();
 
+                        LatLng myPos = new LatLng(lat, lng);
+                        mMap.moveCamera(CameraUpdateFactory.newLatLngZoom(myPos, 14));
 
+                        loadWalkRoutes(lat, lng, foodCalories);
+                        fusedLocationClient.removeLocationUpdates(this);
+                    }
+                }
+            }, getMainLooper());
 
-
-        // 2. 지도에 LocationSource를 설정하여 현재 위치를 표시
-        naverMap.setLocationSource(locationSource);
-
-        // 3. 권한 확인. onRequestPermissionsResult에서 결과에 따라 위치 추적 시작
-        ActivityCompat.requestPermissions(this, new String[]{Manifest.permission.ACCESS_FINE_LOCATION}, LOCATION_PERMISSION_REQUEST_CODE);
+        } catch (SecurityException e) {
+            e.printStackTrace();
+        }
     }
 
-    // 4. 권한 요청 결과를 처리하는 메서드
-    @Override
-    public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
-        // FusedLocationSource가 권한 요청 결과를 처리하도록 전달
-        if (locationSource.onRequestPermissionsResult(requestCode, permissions, grantResults)) {
-            if (!locationSource.isActivated()) { // 권한이 거부되었다면
-                naverMap.setLocationTrackingMode(LocationTrackingMode.None);
-                Toast.makeText(this, "위치 권한이 거부되었습니다.", Toast.LENGTH_SHORT).show();
-            } else { // 권한이 허용되었다면
-                naverMap.setLocationTrackingMode(LocationTrackingMode.Follow); // 현재 위치 추적 모드 활성화
-                Toast.makeText(this, "위치 권한이 허용되었습니다.", Toast.LENGTH_SHORT).show();
+    private void loadWalkRoutes(double lat, double lng, double calories) {
+        RetrofitAPI api = RetrofitClient.getApiService();
+        Call<WalkResponse> call = api.getWalks(lat, lng, calories);
+
+        call.enqueue(new Callback<WalkResponse>() {
+            @Override
+            public void onResponse(Call<WalkResponse> call, Response<WalkResponse> response) {
+                if (response.isSuccessful() && response.body() != null) {
+                    WalkResponse data = response.body();
+                    List<WalkRoute> nearby = data.getNearbyRoutes();
+                    List<WalkRoute> famous = data.getFamousRoutes();
+
+                    runOnUiThread(() -> {
+                        if (nearby != null) {
+                            for (WalkRoute route : nearby) {
+                                LatLng point = new LatLng(route.getLat(), route.getLng());
+                                mMap.addMarker(new MarkerOptions()
+                                        .position(point)
+                                        .title(route.getName())
+                                        .snippet("거리: " + route.getDistance() + " km (근처 코스)"));
+                            }
+                        }
+
+                        if (famous != null) {
+                            for (WalkRoute route : famous) {
+                                LatLng point = new LatLng(route.getLat(), route.getLng());
+                                mMap.addMarker(new MarkerOptions()
+                                        .position(point)
+                                        .title("⭐ " + route.getName())
+                                        .snippet("도시: " + route.getCity() + " / 거리: " + route.getDistance() + " km"));
+                            }
+                        }
+
+                        mMap.setOnMarkerClickListener(marker -> {
+                            marker.showInfoWindow(); // 클릭 시 정보창 표시
+                            return true;
+                        });
+                    });
+                } else {
+                    Toast.makeText(MapActivity.this, "서버 응답 오류", Toast.LENGTH_SHORT).show();
+                }
             }
-            return;
-        }
+
+            @Override
+            public void onFailure(Call<WalkResponse> call, Throwable t) {
+                Toast.makeText(MapActivity.this, "서버 연결 실패: " + t.getMessage(), Toast.LENGTH_SHORT).show();
+            }
+        });
+    }
+
+    @Override
+    public void onRequestPermissionsResult(int requestCode,
+                                           @NonNull String[] permissions,
+                                           @NonNull int[] grantResults) {
         super.onRequestPermissionsResult(requestCode, permissions, grantResults);
+        if (requestCode == LOCATION_PERMISSION_REQUEST_CODE) {
+            if (grantResults.length > 0 && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
+                enableMyLocation();
+            } else {
+                Toast.makeText(this, "위치 권한이 필요합니다.", Toast.LENGTH_SHORT).show();
+            }
+        }
     }
 }

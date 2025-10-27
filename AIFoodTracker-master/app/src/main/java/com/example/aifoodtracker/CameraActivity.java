@@ -20,6 +20,7 @@ import com.example.aifoodtracker.domain.FoodResponse;
 import com.example.aifoodtracker.domain.User;
 import com.example.aifoodtracker.network.RetrofitAPI;
 import com.example.aifoodtracker.network.RetrofitClient;
+import com.example.aifoodtracker.utils.UserPreferenceManager; // ✅ 사용자 정보 복원 클래스 import
 
 import java.io.File;
 import java.io.IOException;
@@ -64,8 +65,14 @@ public class CameraActivity extends AppCompatActivity {
         iv_preview = findViewById(R.id.iv_preview);
         btn_take_picture = findViewById(R.id.btn_take_picture);
 
+        // ✅ 사용자 정보 복구 로직
         Intent intent = getIntent();
         user = intent.getParcelableExtra("user_data");
+
+        if (user == null) {
+            // SharedPreferences 에서 복원
+            user = UserPreferenceManager.getUser(this);
+        }
 
         if (user == null) {
             Toast.makeText(this, "사용자 정보가 없어 앱을 종료합니다.", Toast.LENGTH_LONG).show();
@@ -126,6 +133,7 @@ public class CameraActivity extends AppCompatActivity {
                     FoodResponse foodResponse = response.body();
                     Toast.makeText(CameraActivity.this, "분석 결과: " + foodResponse.getFoodName(), Toast.LENGTH_SHORT).show();
 
+                    // ✅ 결과를 MainActivity로 전달
                     Intent intent = new Intent(CameraActivity.this, MainActivity.class);
                     intent.putExtra("user_data", user);
                     intent.putExtra("food_response", foodResponse);
