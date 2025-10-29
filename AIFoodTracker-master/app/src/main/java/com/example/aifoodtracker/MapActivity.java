@@ -2,23 +2,31 @@ package com.example.aifoodtracker;
 
 import androidx.annotation.NonNull;
 import androidx.core.app.ActivityCompat;
+import androidx.core.content.ContextCompat;
 import androidx.fragment.app.FragmentActivity;
 
 import android.Manifest;
+import android.content.pm.PackageManager;
+import android.location.Location;
 import android.os.Bundle;
+import android.util.Log;
 import android.widget.Toast;
 
 import com.example.aifoodtracker.domain.WalkResponse;
 import com.example.aifoodtracker.domain.WalkRoute;
 import com.example.aifoodtracker.network.RetrofitAPI;
 import com.example.aifoodtracker.network.RetrofitClient;
-import com.naver.maps.geometry.LatLng;
-import com.naver.maps.map.CameraUpdate;
-import com.naver.maps.map.MapFragment; // 구글의 SupportMapFragment가 아님
-import com.naver.maps.map.NaverMap;
-import com.naver.maps.map.OnMapReadyCallback;
-import com.naver.maps.map.overlay.Marker;
-import com.naver.maps.map.util.FusedLocationSource; // 구글의 FusedLocationProviderClient가 아님
+
+// 🚨 아래 import 줄들 맨 앞에 // 를 붙여주세요 (이미 주석 처리 되어 있어야 함)
+// import com.naver.maps.geometry.LatLng;
+// import com.naver.maps.map.CameraUpdate;
+// import com.naver.maps.map.LocationTrackingMode;
+// import com.naver.maps.map.MapFragment;
+// import com.naver.maps.map.NaverMap;
+// import com.naver.maps.map.OnMapReadyCallback; // 🚨 이 줄도 주석 처리!
+// import com.naver.maps.map.overlay.Marker;
+// import com.naver.maps.map.overlay.OverlayImage;
+// import com.naver.maps.map.util.FusedLocationSource;
 
 import java.util.List;
 
@@ -26,97 +34,68 @@ import retrofit2.Call;
 import retrofit2.Callback;
 import retrofit2.Response;
 
-public class MapActivity extends FragmentActivity implements OnMapReadyCallback {
+// 🚨 OnMapReadyCallback 인터페이스 구현 부분을 제거합니다!
+public class MapActivity extends FragmentActivity { // OnMapReadyCallback 제거됨
 
-    private NaverMap mNaverMap;
-    private FusedLocationSource mLocationSource;
+    // 🚨 NaverMap 관련 변수들 주석 처리 (이미 주석 처리 되어 있어야 함)
+    // private NaverMap naverMap;
+    // private FusedLocationSource locationSource;
     private static final int LOCATION_PERMISSION_REQUEST_CODE = 100;
-    private double foodCalories = 580.0; // TODO: AI 분석 결과에서 전달받아야 함
+    private double foodCalories = 580.0; // AI 분석 결과에서 전달받을 값 (이건 유지)
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_map);
 
-        // FusedLocationSource 객체 생성
-        mLocationSource = new FusedLocationSource(this, LOCATION_PERMISSION_REQUEST_CODE);
+        // 🚨 네이버 지도 초기화 코드 전체 주석 처리 (이미 주석 처리 되어 있어야 함)
+        /*
+        locationSource = new FusedLocationSource(this, LOCATION_PERMISSION_REQUEST_CODE);
 
-        // SupportMapFragment 가 아닌 MapFragment 를 사용
-        MapFragment mapFragment = (MapFragment) getSupportFragmentManager()
-                .findFragmentById(R.id.map);
-
+        MapFragment mapFragment = (MapFragment) getSupportFragmentManager().findFragmentById(R.id.map);
         if (mapFragment == null) {
             mapFragment = MapFragment.newInstance();
             getSupportFragmentManager().beginTransaction().add(R.id.map, mapFragment).commit();
         }
         mapFragment.getMapAsync(this);
+        */
+
+        // 지도 기능이 없으므로 사용자에게 안내 메시지 표시 (임시)
+        Toast.makeText(this, "지도 기능을 임시로 비활성화했습니다.", Toast.LENGTH_LONG).show();
     }
 
+    // 🚨 onMapReady 메소드 전체 주석 처리 (이미 주석 처리 되어 있어야 함)
+    /*
     @Override
     public void onMapReady(@NonNull NaverMap naverMap) {
-        mNaverMap = naverMap;
-
-        // 위치 권한 확인 및 현재 위치 활성화
-        checkLocationPermission();
+        // ... (내용 생략) ...
     }
+    */
 
-    private void checkLocationPermission() {
-        String[] permissions = { Manifest.permission.ACCESS_FINE_LOCATION, Manifest.permission.ACCESS_COARSE_LOCATION };
-
-        if (ActivityCompat.checkSelfPermission(this, permissions[0]) != android.content.pm.PackageManager.PERMISSION_GRANTED &&
-                ActivityCompat.checkSelfPermission(this, permissions[1]) != android.content.pm.PackageManager.PERMISSION_GRANTED) {
-
-            ActivityCompat.requestPermissions(this, permissions, LOCATION_PERMISSION_REQUEST_CODE);
-        } else {
-            // 권한이 이미 있을 경우, 위치 추적 시작
-            mNaverMap.setLocationSource(mLocationSource);
-            mNaverMap.setLocationTrackingMode(com.naver.maps.map.LocationTrackingMode.Follow);
-
-            // FusedLocationSource를 사용하여 현재 위치 가져오기 (1회성)
-            mLocationSource.activate(location -> {
-                if (location != null) {
-                    double lat = location.getLatitude();
-                    double lng = location.getLongitude();
-                    loadWalkRoutes(lat, lng, foodCalories);
-                    mNaverMap.moveCamera(CameraUpdate.scrollTo(new LatLng(lat, lng)));
-                    mLocationSource.deactivate(); // 1회성 위치 업데이트 후 비활성화
-                }
-            });
-        }
+    // 🚨 setupLocationListener 메소드 전체 주석 처리 (이미 주석 처리 되어 있어야 함)
+    /*
+    private void setupLocationListener() {
+        // ... (내용 생략) ...
     }
+    */
 
+    // 산책길 정보 로드 (이 메소드는 유지하되, 지도에 마커 찍는 부분은 주석 처리 - 이미 되어 있어야 함)
     private void loadWalkRoutes(double lat, double lng, double calories) {
         RetrofitAPI api = RetrofitClient.getApiService();
         Call<WalkResponse> call = api.getWalks(lat, lng, calories);
 
         call.enqueue(new Callback<WalkResponse>() {
             @Override
-            public void onResponse(@NonNull Call<WalkResponse> call, @NonNull Response<WalkResponse> response) {
+            public void onResponse(Call<WalkResponse> call, Response<WalkResponse> response) {
                 if (response.isSuccessful() && response.body() != null) {
-                    WalkResponse data = response.body();
-                    List<WalkRoute> nearby = data.getNearbyRoutes();
-                    List<WalkRoute> famous = data.getFamousRoutes();
+                    // ... (기존 로그/Toast 코드) ...
 
                     runOnUiThread(() -> {
-                        if (nearby != null) {
-                            for (WalkRoute route : nearby) {
-                                Marker marker = new Marker();
-                                marker.setPosition(new LatLng(route.getLat(), route.getLng()));
-                                marker.setCaptionText(route.getName());
-                                marker.setSubCaptionText("거리: " + route.getDistance() + " km (근처 코스)");
-                                marker.setMap(mNaverMap);
-                            }
-                        }
-
-                        if (famous != null) {
-                            for (WalkRoute route : famous) {
-                                Marker marker = new Marker();
-                                marker.setPosition(new LatLng(route.getLat(), route.getLng()));
-                                marker.setCaptionText("⭐ " + route.getName());
-                                marker.setSubCaptionText("도시: " + route.getCity() + " / 거리: " + route.getDistance() + " km");
-                                marker.setMap(mNaverMap);
-                            }
-                        }
+                        // 🚨 지도 관련 코드 (마커 추가) 주석 처리 (이미 되어 있어야 함)
+                        /*
+                        // ... (마커 추가 코드) ...
+                        */
+                        Toast.makeText(MapActivity.this, "산책길 데이터 로드 성공 (마커 표시는 비활성화됨)", Toast.LENGTH_SHORT).show();
                     });
                 } else {
                     Toast.makeText(MapActivity.this, "서버 응답 오류", Toast.LENGTH_SHORT).show();
@@ -124,25 +103,20 @@ public class MapActivity extends FragmentActivity implements OnMapReadyCallback 
             }
 
             @Override
-            public void onFailure(@NonNull Call<WalkResponse> call, @NonNull Throwable t) {
+            public void onFailure(Call<WalkResponse> call, Throwable t) {
                 Toast.makeText(MapActivity.this, "서버 연결 실패: " + t.getMessage(), Toast.LENGTH_SHORT).show();
             }
         });
     }
 
+    // 🚨 onRequestPermissionsResult 메소드 전체 주석 처리 (이미 되어 있어야 함)
+    /*
     @Override
     public void onRequestPermissionsResult(int requestCode,
                                            @NonNull String[] permissions,
                                            @NonNull int[] grantResults) {
-        if (mLocationSource.onRequestPermissionsResult(requestCode, permissions, grantResults)) {
-            if (mLocationSource.isActivated()) { // 권한이 부여되었는지 확인
-                mNaverMap.setLocationTrackingMode(com.naver.maps.map.LocationTrackingMode.Follow);
-            } else {
-                Toast.makeText(this, "위치 권한이 필요합니다.", Toast.LENGTH_SHORT).show();
-            }
-            return;
-        }
-        super.onRequestPermissionsResult(requestCode, permissions, grantResults);
+       // ... (내용 생략) ...
     }
+    */
 }
 

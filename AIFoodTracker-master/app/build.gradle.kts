@@ -3,8 +3,8 @@ plugins {
 }
 
 android {
-    namespace = "com.example.aifoodtracker"
-    compileSdk = 34
+    namespace = "com.example.aifoodtracker" // 본인 프로젝트에 맞게 설정됨
+    compileSdk = 34 // 이 숫자는 다를 수 있습니다
 
     defaultConfig {
         applicationId = "com.example.aifoodtracker"
@@ -48,13 +48,16 @@ dependencies {
     implementation("com.github.bumptech.glide:glide:4.12.0")
 
     // MPAndroidChart (그래프/차트)
-    implementation("com.github.PhilJay:MPAndroidChart:v3.1.0")
+    implementation("com.github.PhilJay:MPAndroidChart:v3.1.0" )
 
-    // 🚨 네이버 지도 SDK 추가
-    implementation("com.naver.maps:map-sdk:3.21.0")
+    // 🚨 네이버 지도 라이브러리 주석 처리
+    // implementation("com.naver.maps:map-sdk:3.21.0")
 
-    // 🚨 구글 지도/위치 라이브러리 삭제됨
-    // implementation("com.google.android.gms:play-services-location:21.0.1")
+    // Google Play 위치 서비스 (네이버 지도를 쓰지 않아도 위치 정보는 필요할 수 있으므로 유지)
+    implementation("com.google.android.gms:play-services-location:21.0.1")
+    implementation(libs.activity)
+
+    // Google 지도 라이브러리 (네이버 지도를 안 쓰므로 주석 처리 또는 삭제)
     // implementation("com.google.android.gms:play-services-maps:18.1.0")
 }
 

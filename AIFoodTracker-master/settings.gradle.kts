@@ -10,14 +10,11 @@ dependencyResolutionManagement {
     repositories {
         google()
         mavenCentral()
-        // MPAndroidChart, CircleProgressView, DottedProgressBar 등
-        maven("https://jitpack.io")
-        // 카카오맵
-
-        // 네이버 지도
-        maven("https://repository.map.naver.com/archive/maven")
+        // 🚨 네이버 저장소 주석 처리
+        // maven { url = uri("https://repo.naver.com/naver") }
+        maven { url = uri("https://jitpack.io") } // Jitpack은 남겨둡니다 (MPAndroidChart 때문)
     }
 }
-
 rootProject.name = "AIFoodTracker"
 include(":app")
+

@@ -1,64 +1,97 @@
 package com.example.aifoodtracker.adapter;
 
 import android.content.Context;
+import android.content.Intent; // Intent import 추가
+import android.net.Uri;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
-import android.widget.Button;
+import android.widget.ImageButton; // ImageButton import 추가
+import android.widget.ImageView;
 import android.widget.TextView;
+import androidx.activity.result.ActivityResultLauncher; // Launcher import 추가
 import androidx.annotation.NonNull;
 import androidx.recyclerview.widget.RecyclerView;
+import com.bumptech.glide.Glide;
+import com.example.aifoodtracker.EditFoodActivity; // EditFoodActivity import 추가
 import com.example.aifoodtracker.R;
+import com.example.aifoodtracker.domain.FoodEntry;
 import java.util.ArrayList;
 
-// RecyclerView 어댑터는 항상 RecyclerView.Adapter를 상속받아 만듭니다.
-public class MealAdapter extends RecyclerView.Adapter<MealAdapter.MealViewHolder> {
+public class MealAdapter extends RecyclerView.Adapter<MealAdapter.ViewHolder> {
 
-    private Context context;
-    private ArrayList<String> mealList; // 데이터 목록 (지금은 간단히 문자열 리스트)
+    private final Context context;
+    private final ArrayList<FoodEntry> mealList;
+    private final ActivityResultLauncher<Intent> editFoodLauncher; // ⭐️ Launcher 멤버 변수 추가
 
-    // 생성자: MainActivity에서 데이터 목록을 받아옵니다.
-    public MealAdapter(Context context, ArrayList<String> mealList) {
+    // ⭐️ 생성자 수정: ActivityResultLauncher를 받도록 변경
+    public MealAdapter(Context context, ArrayList<FoodEntry> mealList, ActivityResultLauncher<Intent> editFoodLauncher) {
         this.context = context;
         this.mealList = mealList;
+        this.editFoodLauncher = editFoodLauncher; // 전달받은 Launcher 저장
     }
 
-    // 1. ViewHolder 만들기 (아이템 한 칸을 새로 만들어야 할 때 호출됨)
     @NonNull
     @Override
-    public MealViewHolder onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
-        // item_meal.xml 디자인을 가져와서 실제 View 객체로 만듭니다.
+    public ViewHolder onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
         View view = LayoutInflater.from(context).inflate(R.layout.item_meal, parent, false);
-        return new MealViewHolder(view);
+        return new ViewHolder(view);
     }
 
-    // 2. ViewHolder에 데이터 채우기 (만들어진 아이템 칸에 데이터를 표시할 때 호출됨)
     @Override
-    public void onBindViewHolder(@NonNull MealViewHolder holder, int position) {
-        // mealList에서 position에 해당하는 데이터를 가져옵니다. (예: "식사 1")
-        String mealTitle = mealList.get(position);
-        // ViewHolder의 TextView에 데이터를 설정합니다.
-        holder.tvMealTitle.setText(mealTitle);
+    public void onBindViewHolder(@NonNull ViewHolder holder, int position) {
+        FoodEntry entry = mealList.get(position);
+
+        // 데이터 설정 (기존과 동일)
+        holder.tvFoodName.setText(entry.getFoodName());
+        holder.tvTimestamp.setText(entry.getFormattedTime());
+        holder.tvNutritionSummary.setText(entry.getNutritionSummary());
+
+        // 이미지 로딩 (기존과 동일)
+        if (entry.getImageUri() != null && !entry.getImageUri().isEmpty()) {
+            Glide.with(context)
+                    .load(Uri.parse(entry.getImageUri()))
+                    .placeholder(R.drawable.ic_launcher_background)
+                    .error(R.drawable.ic_launcher_foreground)
+                    .into(holder.ivFoodImage);
+        } else {
+            holder.ivFoodImage.setImageResource(R.drawable.ic_launcher_background);
+        }
+
+        // ⭐️ 수정 버튼 클릭 리스너 설정 ⭐️
+        holder.btnEditMeal.setOnClickListener(v -> {
+            // EditFoodActivity를 시작할 Intent 생성
+            Intent intent = new Intent(context, EditFoodActivity.class);
+            // 수정할 FoodEntry 객체와 리스트에서의 위치(position)를 Intent에 담아 전달
+            intent.putExtra("food_entry_to_edit", entry);
+            intent.putExtra("food_entry_position", holder.getAdapterPosition()); // 현재 아이템의 정확한 위치
+
+            // ⭐️ MainActivity로부터 전달받은 Launcher를 사용해서 Activity 시작 ⭐️
+            editFoodLauncher.launch(intent);
+        });
     }
 
-    // 3. 전체 아이템 개수 알려주기
     @Override
     public int getItemCount() {
         return mealList.size();
     }
 
+    // ⭐️ ViewHolder 수정: btnEditMeal 추가 ⭐️
+    public static class ViewHolder extends RecyclerView.ViewHolder {
+        ImageView ivFoodImage;
+        TextView tvFoodName;
+        TextView tvTimestamp;
+        TextView tvNutritionSummary;
+        ImageButton btnEditMeal; // 수정 버튼 변수 추가
 
-    // ViewHolder 클래스: 아이템 한 칸의 View들을 보관하는 상자
-    public static class MealViewHolder extends RecyclerView.ViewHolder {
-        // item_meal.xml에 있는 UI 요소들을 변수로 선언
-        public TextView tvMealTitle;
-        public Button btnMealDetail;
-
-        public MealViewHolder(@NonNull View itemView) {
+        public ViewHolder(@NonNull View itemView) {
             super(itemView);
-            // 변수와 실제 UI 요소를 ID로 연결
-            tvMealTitle = itemView.findViewById(R.id.tv_meal_title);
-            btnMealDetail = itemView.findViewById(R.id.btn_meal_detail);
+            ivFoodImage = itemView.findViewById(R.id.iv_food_image);
+            tvFoodName = itemView.findViewById(R.id.tv_food_name);
+            tvTimestamp = itemView.findViewById(R.id.tv_timestamp);
+            tvNutritionSummary = itemView.findViewById(R.id.tv_nutrition_summary);
+            btnEditMeal = itemView.findViewById(R.id.btn_edit_meal); // 수정 버튼 ID 연결
         }
     }
 }
+

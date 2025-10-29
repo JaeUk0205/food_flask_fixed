@@ -1,81 +1,70 @@
 <?xml version="1.0" encoding="utf-8"?>
-<androidx.cardview.widget.CardView
-    xmlns:android="http://schemas.android.com/apk/res/android"
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
-    android:layout_marginHorizontal="8dp"
-    android:layout_marginVertical="6dp"
-    app:cardCornerRadius="16dp"
-    app:cardElevation="4dp"
-    app:cardBackgroundColor="#F1FAF9"> <LinearLayout
-    android:layout_width="match_parent"
-    android:layout_height="wrap_content"
-    android:orientation="vertical"
-    android:padding="16dp">
+    android:orientation="horizontal"
+    android:padding="12dp"
+    android:layout_marginBottom="8dp"
+    android:background="@drawable/border_green_xml"
+    android:gravity="center_vertical"> <!-- 세로 중앙 정렬 추가 -->
 
-    <RelativeLayout
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:layout_marginBottom="12dp">
-
-        <TextView
-            android:id="@+id/tv_meal_title"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="식사 1"
-            android:textSize="20sp"
-            android:textStyle="bold"
-            android:textColor="@color/text_color_primary"
-            android:layout_centerVertical="true"
-            android:layout_alignParentStart="true"/>
-
-        <androidx.appcompat.widget.AppCompatButton
-            android:id="@+id/btn_meal_detail"
-            android:layout_width="wrap_content"
-            android:layout_height="40dp"
-            android:text="상세보기"
-            android:textColor="@color/white"
-            android:background="@drawable/button_rounded"
-            android:layout_alignParentEnd="true"
-            android:layout_centerVertical="true"/>
-
-    </RelativeLayout>
+    <!-- 음식 사진 -->
+    <ImageView
+        android:id="@+id/iv_food_image"
+        android:layout_width="72dp"
+        android:layout_height="72dp"
+        android:scaleType="centerCrop"
+        android:layout_marginEnd="12dp"
+        android:src="@drawable/ic_launcher_background" />
 
     <LinearLayout
-        android:layout_width="match_parent"
+        android:layout_width="0dp"
         android:layout_height="wrap_content"
-        android:orientation="horizontal"
-        android:gravity="end">
+        android:layout_weight="1"
+        android:orientation="vertical">
 
-        <ImageButton
-            android:id="@+id/btn_add_by_camera"
-            android:layout_width="48dp"
-            android:layout_height="48dp"
-            android:background="?attr/selectableItemBackgroundBorderless"
-            android:src="@android:drawable/ic_menu_camera"
-            app:tint="@color/primary_dark_color"
-            android:contentDescription="카메라로 추가"/>
+        <!-- 음식 이름 -->
+        <TextView
+            android:id="@+id/tv_food_name"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="음식 이름"
+            android:textSize="16sp"
+            android:textColor="@color/black"
+            android:textStyle="bold"/>
 
-        <ImageButton
-            android:id="@+id/btn_add_by_gallery"
-            android:layout_width="48dp"
-            android:layout_height="48dp"
-            android:background="?attr/selectableItemBackgroundBorderless"
-            android:src="@android:drawable/ic_menu_gallery"
-            app:tint="@color/primary_dark_color"
-            android:contentDescription="갤러리로 추가"/>
+        <!-- 기록 시간 -->
+        <TextView
+            android:id="@+id/tv_timestamp"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="기록 시간"
+            android:textSize="12sp"
+            android:textColor="@android:color/darker_gray"
+            android:layout_marginTop="4dp"/>
 
-        <ImageButton
-            android:id="@+id/btn_add_by_search"
-            android:layout_width="48dp"
-            android:layout_height="48dp"
-            android:background="?attr/selectableItemBackgroundBorderless"
-            android:src="@android:drawable/ic_menu_search"
-            app:tint="@color/primary_dark_color"
-            android:contentDescription="검색으로 추가"/>
-
+        <!-- 영양 정보 요약 -->
+        <TextView
+            android:id="@+id/tv_nutrition_summary"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="칼로리: 0 kcal, 탄: 0g, 단: 0g, 지: 0g"
+            android:textSize="13sp"
+            android:textColor="@color/black"
+            android:layout_marginTop="6dp"/>
     </LinearLayout>
 
+    <!-- ⭐️ 수정 버튼 추가 ⭐️ -->
+    <ImageButton
+        android:id="@+id/btn_edit_meal"
+        android:layout_width="48dp"
+        android:layout_height="48dp"
+        android:src="@android:drawable/ic_menu_edit"
+        app:tint="@android:color/darker_gray"
+        android:background="?attr/selectableItemBackgroundBorderless"
+        android:contentDescription="수정"
+        android:layout_marginStart="8dp"/>
+
 </LinearLayout>
-</androidx.cardview.widget.CardView>
+

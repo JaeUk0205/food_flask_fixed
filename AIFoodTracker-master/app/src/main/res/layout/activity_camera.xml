@@ -4,51 +4,44 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="@color/light_gray"
     tools:context=".CameraActivity">
 
-    <TextView
-        android:id="@+id/tv_camera_title"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_marginTop="32dp"
-        android:text="음식 사진 촬영"
-        android:textColor="@color/primary_dark_color"
-        android:textSize="24sp"
-        android:textStyle="bold"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toTopOf="parent" />
-
-    <!-- 사진 미리보기 영역 -->
     <ImageView
         android:id="@+id/iv_preview"
         android:layout_width="0dp"
         android:layout_height="0dp"
-        android:layout_margin="32dp"
-        android:background="@drawable/border_green_xml"
-        android:padding="64dp"
-        android:scaleType="fitCenter"
+        android:layout_marginBottom="16dp"
+        android:scaleType="centerCrop"
+        android:src="@android:drawable/ic_menu_gallery"
         app:layout_constraintBottom_toTopOf="@+id/btn_take_picture"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@id/tv_camera_title"
-        app:srcCompat="@drawable/baseline_photo_camera_24"
-        app:tint="@color/primary_color" />
+        app:layout_constraintTop_toTopOf="parent"
+        tools:srcCompat="@tools:sample/backgrounds/scenic" />
 
-    <!-- 촬영하기 버튼 -->
-    <androidx.appcompat.widget.AppCompatButton
+    <Button
         android:id="@+id/btn_take_picture"
         android:layout_width="0dp"
-        android:layout_height="56dp"
-        android:layout_margin="32dp"
-        android:background="@drawable/button_rounded"
-        android:text="촬영하기"
-        android:textColor="@color/white"
-        android:textSize="18sp"
-        android:textStyle="bold"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="16dp"
+        android:layout_marginEnd="8dp"
+        android:layout_marginBottom="16dp"
+        android:text="사진 촬영"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toStartOf="@+id/btn_select_gallery"
+        app:layout_constraintStart_toStartOf="parent" />
+
+    <!-- 🚨 새로 추가된 갤러리 버튼 -->
+    <Button
+        android:id="@+id/btn_select_gallery"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="8dp"
+        android:layout_marginEnd="16dp"
+        android:layout_marginBottom="16dp"
+        android:text="갤러리 선택"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintStart_toStartOf="parent" />
+        app:layout_constraintStart_toEndOf="@+id/btn_take_picture" />
 
 </androidx.constraintlayout.widget.ConstraintLayout>
