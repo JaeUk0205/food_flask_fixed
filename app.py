@@ -166,6 +166,13 @@ def recommend_walks():
 
     return jsonify(result), 200
 
+# --------------------------
+# test.html 파일 제공 (추가된 부분)
+# --------------------------
+@app.route("/test.html")
+def serve_test_html():
+    # 현재 폴더(BASE_DIR)에서 test.html 파일을 찾아서 보내줌
+    return send_from_directory(BASE_DIR, "test.html")
 
 # --------------------------
 # 서버 실행
