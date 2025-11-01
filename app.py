@@ -1,4 +1,4 @@
-# app.py (AI 음식 분석 + BMI + 산책길 추천 통합 버전)
+# app.py (AI 음식 분석 + BMI + 산책길 추천 + ⭐️음식 검색 API)
 import os
 import ssl
 import random
@@ -10,8 +10,9 @@ from flask_cors import CORS
 
 ssl._create_default_httpserver_context = ssl._create_unverified_context
 
+# ⭐️ db에서 Nutrition 모델과 normalize_key 함수를 가져와야 함
 from classifier import classify_image
-from database import db, Nutrition, normalize_key
+from database import db, Nutrition, normalize_key 
 
 RISK_THRESHOLDS = {"calories": 600, "sugar": 20}
 
@@ -101,12 +102,14 @@ def calculate_bmi():
             return jsonify({"error": "gender must be 'male' or 'female'"}), 400
         if height_cm <= 0 or weight_kg <= 0:
             return jsonify({"error": "height and weight must be positive values"}), 400
+        
         height_m = height_cm / 100
         bmi = weight_kg / (height_m ** 2)
         if bmi < 18.5: status = "저체중"
         elif 18.5 <= bmi < 23: status = "정상 체중"
         elif 23 <= bmi < 25: status = "과체중"
         else: status = "비만"
+        
         gender_text = "남성" if gender == "male" else "여성"
         message = f"{gender_text} 기준, {status}입니다."
         response_data = {"bmi": round(bmi, 2), "status": status, "message": message}
@@ -166,16 +169,67 @@ def recommend_walks():
 
     return jsonify(result), 200
 
+
 # --------------------------
-# test.html 파일 제공 (추가된 부분)
+# ⭐️ 4️⃣ (신규) 음식 이름 검색 API ⭐️
+# --------------------------
+@app.route("/v1/search_food", methods=["GET"])
+def search_food_by_name():
+    # 1. URL에서 'name' 파라미터(검색어) 가져오기
+    query_name = request.args.get("name", "").strip()
+    
+    # 2. 검색어가 2글자 미만이면 빈 리스트 반환 (DB 부하 방지)
+    if len(query_name) < 2:
+        return jsonify([]), 200 # 200 OK, but empty list
+
+    try:
+        # 3. DB에서 검색어를 정규화(normalize_key)해서 검색
+        search_key = normalize_key(query_name)
+        # 'LIKE' 쿼리로 이름의 일부가 일치하는 항목 검색, 최대 10개
+        food_items = Nutrition.query.filter(Nutrition.name_key.like(f"%{search_key}%")).limit(10).all()
+
+        results = []
+        # 4. 검색 결과를 앱에서 사용하던 FoodResponse 형식과 유사하게 가공
+        for nut in food_items:
+            # AI 분석 결과와 동일한 형식으로 NutritionInfo 구성
+            nutrition_info = {
+                "calories": float(nut.kcal) if nut and nut.kcal is not None else 0.0,
+                "carbohydrate": float(nut.carbs_g) if nut and nut.carbs_g is not None else 0.0,
+                "protein": float(nut.protein_g) if nut and nut.protein_g is not None else 0.0,
+                "fat": float(nut.fat_g) if nut and nut.fat_g is not None else 0.0,
+                "sugar": float(nut.sugar_g) if nut and nut.sugar_g is not None else 0.0,
+            }
+
+            # AI 분석 결과(FoodResponse)와 동일한 형식으로 응답 구성
+            response_data = {
+                "foodName": nut.name, # DB에 저장된 원본 이름
+                "confidence": 1.0,    # 수동 검색이므로 신뢰도 100%
+                "imageUrl": None,     # 수동 추가이므로 이미지는 없음
+                "nutritionInfo": nutrition_info,
+                "riskInfo": None      # 수동 추가 시 위험 정보는 계산하지 않음
+            }
+            results.append(response_data)
+        
+        # 5. 검색 결과 리스트를 JSON으로 반환
+        return jsonify(results), 200
+
+    except Exception as e:
+        app.logger.error(f"Database search failed: {e}") # ⭐️ 서버 로그에 오류 기록
+        return jsonify({"error": f"Database search failed: {e}"}), 500
+
+
+# --------------------------
+# test.html 파일 제공
 # --------------------------
 @app.route("/test.html")
 def serve_test_html():
     # 현재 폴더(BASE_DIR)에서 test.html 파일을 찾아서 보내줌
     return send_from_directory(BASE_DIR, "test.html")
 
+
 # --------------------------
 # 서버 실행
 # --------------------------
 if __name__ == "__main__":
     app.run(host="0.0.0.0", port=8000, debug=True)
+

@@ -1,14 +1,13 @@
 package com.example.aifoodtracker;
 
 import android.app.ProgressDialog;
-import android.content.ContentResolver;
+import android.content.Context;
 import android.content.Intent;
 import android.net.Uri;
 import android.os.Bundle;
 import android.os.Environment;
-import android.provider.MediaStore; // MediaStore import 추가
-import android.util.Log; // Log import 추가
-import android.webkit.MimeTypeMap; // MimeTypeMap import 추가
+import android.provider.MediaStore;
+import android.util.Log;
 import android.widget.Button;
 import android.widget.ImageView;
 import android.widget.Toast;
@@ -27,10 +26,10 @@ import com.example.aifoodtracker.network.RetrofitClient;
 import com.example.aifoodtracker.utils.UserPreferenceManager;
 
 import java.io.File;
-import java.io.FileOutputStream; // FileOutputStream import 추가
+import java.io.FileOutputStream;
 import java.io.IOException;
-import java.io.InputStream; // InputStream import 추가
-import java.io.OutputStream; // OutputStream import 추가
+import java.io.InputStream;
+import java.io.OutputStream;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.Locale;
@@ -44,52 +43,63 @@ import retrofit2.Response;
 
 public class CameraActivity extends AppCompatActivity {
 
-    private static final String TAG = "CameraActivity"; // 로그 태그 추가
+    private static final String TAG = "CameraActivity"; // 로그 태그
 
     private ImageView iv_preview;
-    private Button btn_take_picture;
-    private Button btn_select_gallery; // 갤러리 버튼 변수 추가
-    private Uri photoUri; // 카메라 촬영 결과 URI
-    private File imageFile; // 서버에 업로드할 최종 파일
+    private Button btn_take_picture, btn_select_gallery; // 갤러리 버튼 변수
+    private Uri photoUri; // 카메라 촬영 원본 URI
+    private File imageFile; // 서버로 전송할 파일
     private User user;
     private ProgressDialog progressDialog;
 
-    // 카메라 앱 실행 결과 처리 런처
+    // 카메라 앱 런처
     private final ActivityResultLauncher<Uri> takePictureLauncher = registerForActivityResult(
             new ActivityResultContracts.TakePicture(),
             isSuccess -> {
                 if (isSuccess && photoUri != null) {
-                    // imageFile은 createImageFile()에서 이미 생성되었음
                     Glide.with(this).load(photoUri).into(iv_preview);
+                    imageFile = new File(photoUri.getPath()); // photoUri로부터 File 객체 생성 (경로 확인 필요)
                     Toast.makeText(this, "사진 촬영 성공! 서버로 업로드합니다.", Toast.LENGTH_SHORT).show();
                     uploadImageToServer();
                 } else {
+                    Log.e(TAG, "사진 촬영 취소 또는 photoUri가 null입니다.");
                     Toast.makeText(this, "사진 촬영이 취소되었습니다.", Toast.LENGTH_SHORT).show();
                 }
             }
     );
 
-    // 🚨 갤러리 앱 실행 결과 처리 런처 (새로 추가)
-    private final ActivityResultLauncher<String> selectPictureLauncher = registerForActivityResult(
+    // 갤러리 런처
+    private final ActivityResultLauncher<String> selectGalleryLauncher = registerForActivityResult(
             new ActivityResultContracts.GetContent(),
             uri -> {
                 if (uri != null) {
-                    photoUri = uri; // 갤러리에서 선택된 이미지 URI 저장
-                    Glide.with(this).load(photoUri).into(iv_preview);
-                    Toast.makeText(this, "사진 선택 성공! 서버로 업로드합니다.", Toast.LENGTH_SHORT).show();
-                    // 갤러리 URI를 서버 업로드용 File 객체로 변환
-                    imageFile = uriToFile(photoUri);
-                    if (imageFile != null) {
+                    try {
+                        // 갤러리에서 선택한 이미지(uri)를 앱 내부 저장소의 임시 파일(imageFile)로 복사
+                        imageFile = createImageFile(); // 새 임시 파일 생성
+                        copyUriToFile(uri, imageFile); // URI 내용을 파일에 복사
+
+                        photoUri = FileProvider.getUriForFile(
+                                this,
+                                "com.example.aifoodtracker.provider",
+                                imageFile
+                        ); // 파일로부터 FileProvider URI 생성 (썸네일 표시 및 전달용)
+
+                        Glide.with(this).load(uri).into(iv_preview); // 프리뷰에는 원본 uri 로드
+                        Toast.makeText(this, "갤러리 선택 성공! 서버로 업로드합니다.", Toast.LENGTH_SHORT).show();
                         uploadImageToServer();
-                    } else {
-                        Toast.makeText(this, "파일 변환에 실패했습니다.", Toast.LENGTH_SHORT).show();
+
+                    } catch (IOException e) {
+                        Log.e(TAG, "갤러리 이미지 파일 복사 실패", e);
+                        Toast.makeText(this, "파일 처리에 실패했습니다.", Toast.LENGTH_SHORT).show();
+                        imageFile = null;
+                        photoUri = null;
                     }
                 } else {
-                    Toast.makeText(this, "사진 선택이 취소되었습니다.", Toast.LENGTH_SHORT).show();
+                    Log.e(TAG, "갤러리 선택 취소 또는 uri가 null입니다.");
+                    Toast.makeText(this, "갤러리 선택이 취소되었습니다.", Toast.LENGTH_SHORT).show();
                 }
             }
     );
-
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -98,155 +108,114 @@ public class CameraActivity extends AppCompatActivity {
 
         iv_preview = findViewById(R.id.iv_preview);
         btn_take_picture = findViewById(R.id.btn_take_picture);
-        btn_select_gallery = findViewById(R.id.btn_select_gallery); // 갤러리 버튼 연결
+        btn_select_gallery = findViewById(R.id.btn_select_gallery); // 갤러리 버튼 ID 연결
 
-        // ... (User 정보 로드 부분 동일) ...
-        Intent intent = getIntent();
-        user = intent.getParcelableExtra("user_data");
-        if (user == null) {
-            user = UserPreferenceManager.getUser(this);
-        }
+        // ⭐️⭐️⭐️ 수정: Intent 대신 SharedPreferences에서 User 정보 로드 ⭐️⭐️⭐️
+        // user = intent.getParcelableExtra("user_data"); // ⭐️ 이 줄 삭제!
+        user = UserPreferenceManager.getUser(this); // ⭐️ SharedPreferences에서 로드
+
         if (user == null) {
             Toast.makeText(this, "사용자 정보가 없어 앱을 종료합니다.", Toast.LENGTH_LONG).show();
+            Log.e(TAG, "User 정보 로드 실패, CameraActivity 종료");
             finish();
             return;
         }
 
-        // 버튼 클릭 리스너 설정
+        // '사진 촬영' 버튼 클릭 리스너
         btn_take_picture.setOnClickListener(v -> dispatchTakePictureIntent());
-        btn_select_gallery.setOnClickListener(v -> dispatchSelectPictureIntent()); // 갤러리 버튼 리스너 추가
+
+        // '갤러리 선택' 버튼 클릭 리스너
+        btn_select_gallery.setOnClickListener(v -> dispatchSelectGalleryIntent());
     }
 
     // 카메라 앱 실행
     private void dispatchTakePictureIntent() {
         try {
-            // 서버 업로드용 파일 객체 생성 (이 파일에 카메라 앱이 사진 저장)
-            imageFile = createImageFile();
+            imageFile = createImageFile(); // 서버 전송용 파일 생성
         } catch (IOException ex) {
+            Log.e(TAG, "사진 파일 생성 실패", ex);
             Toast.makeText(this, "사진 파일 생성에 실패했습니다.", Toast.LENGTH_SHORT).show();
-            Log.e(TAG, "createImageFile failed", ex); // 로그 추가
             return;
         }
 
         if (imageFile != null) {
-            // FileProvider를 통해 카메라 앱이 접근 가능한 URI 생성
             photoUri = FileProvider.getUriForFile(
                     this,
-                    getApplicationContext().getPackageName() + ".provider", // authorities 수정
+                    "com.example.aifoodtracker.provider",
                     imageFile
-            );
+            ); // FileProvider를 통해 카메라 앱이 접근 가능한 URI 생성
+            Log.d(TAG, "카메라 호출, photoUri: " + photoUri);
             takePictureLauncher.launch(photoUri); // 카메라 앱 실행
         }
     }
 
-    // 🚨 갤러리 앱 실행 (새로 추가)
-    private void dispatchSelectPictureIntent() {
-        // "image/*" 타입의 콘텐츠를 가져오는 인텐트 실행
-        selectPictureLauncher.launch("image/*");
+    // 갤러리 앱 실행
+    private void dispatchSelectGalleryIntent() {
+        Log.d(TAG, "갤러리 호출");
+        selectGalleryLauncher.launch("image/*"); // 모든 이미지 타입 갤러리 열기
     }
 
-
-    // 이미지 파일 생성 (카메라용)
+    // (공통) 이미지 파일 생성 (앱 내부 저장소)
     private File createImageFile() throws IOException {
         String timeStamp = new SimpleDateFormat("yyyyMMdd_HHmmss", Locale.getDefault()).format(new Date());
         String imageFileName = "JPEG_" + timeStamp + "_";
-        File storageDir = getExternalFilesDir(Environment.DIRECTORY_PICTURES);
-        if (storageDir == null) {
-            Log.e(TAG, "ExternalFilesDir is null");
-            throw new IOException("ExternalFilesDir is null");
-        }
-        File image = File.createTempFile(imageFileName, ".jpg", storageDir);
-        Log.d(TAG, "Created image file: " + image.getAbsolutePath()); // 로그 추가
+        File storageDir = getExternalFilesDir(Environment.DIRECTORY_PICTURES); // 앱 전용 외부 저장소
+        // File storageDir = getCacheDir(); // 앱 내부 캐시 디렉토리 (더 좋음)
+        File image = File.createTempFile(
+                imageFileName,  /* prefix */
+                ".jpg",         /* suffix */
+                storageDir      /* directory */
+        );
+        Log.d(TAG, "임시 파일 생성: " + image.getAbsolutePath());
         return image;
     }
 
-    // 🚨 갤러리 URI를 서버 업로드용 File 객체로 변환 (새로 추가 - 핵심 로직)
-    private File uriToFile(Uri uri) {
-        File file = null;
+    // (갤러리용) 갤러리 URI(InputStream)를 앱 내부 파일(OutputStream)로 복사
+    private void copyUriToFile(Uri uri, File file) throws IOException {
         InputStream inputStream = null;
         OutputStream outputStream = null;
         try {
-            // 임시 파일 생성 (카메라 촬영과 유사하게)
-            String timeStamp = new SimpleDateFormat("yyyyMMdd_HHmmss", Locale.getDefault()).format(new Date());
-            String tempFileName = "JPEG_" + timeStamp + "_gallery";
-            File storageDir = getExternalFilesDir(Environment.DIRECTORY_PICTURES);
-            if (storageDir == null) {
-                Log.e(TAG, "ExternalFilesDir is null during URI to File conversion");
-                return null;
-            }
-            // 파일 확장자 가져오기 (선택 사항, 없으면 jpg로 고정)
-            String extension = ".jpg";
-            ContentResolver cR = getContentResolver();
-            MimeTypeMap mime = MimeTypeMap.getSingleton();
-            String type = mime.getExtensionFromMimeType(cR.getType(uri));
-            if (type != null) {
-                extension = "." + type;
-            }
-
-            file = File.createTempFile(tempFileName, extension, storageDir);
-            Log.d(TAG, "Created temp file for gallery image: " + file.getAbsolutePath());
-
-            // ContentResolver를 통해 URI로부터 InputStream 얻기
             inputStream = getContentResolver().openInputStream(uri);
-            if (inputStream == null) {
-                Log.e(TAG, "Failed to open InputStream from URI: " + uri);
-                return null; // 스트림 열기 실패
-            }
-
-            // InputStream의 데이터를 FileOutputStream으로 복사
             outputStream = new FileOutputStream(file);
+            if (inputStream == null) {
+                throw new IOException("InputStream is null");
+            }
             byte[] buffer = new byte[1024];
             int length;
             while ((length = inputStream.read(buffer)) > 0) {
                 outputStream.write(buffer, 0, length);
             }
-            Log.d(TAG, "Successfully copied gallery image to temp file");
-            return file; // 성공적으로 복사된 파일 반환
-
-        } catch (IOException e) {
-            Log.e(TAG, "Failed to convert URI to File", e);
-            // 실패 시 임시 파일 삭제 (선택 사항)
-            if (file != null && file.exists()) {
-                file.delete();
-            }
-            return null; // 오류 발생 시 null 반환
+            Log.d(TAG, "갤러리 파일 복사 완료: " + file.length() + " bytes");
         } finally {
-            // 스트림 닫기
-            try {
-                if (inputStream != null) inputStream.close();
-                if (outputStream != null) outputStream.close();
-            } catch (IOException e) {
-                Log.e(TAG, "Error closing streams", e);
+            if (inputStream != null) {
+                inputStream.close();
+            }
+            if (outputStream != null) {
+                outputStream.close();
             }
         }
     }
 
 
-    // 서버로 이미지 업로드 (기존 코드 재사용)
+    // (공통) 서버로 이미지 업로드
     private void uploadImageToServer() {
-        if (imageFile == null || !imageFile.exists()) { // 파일 존재 여부 체크 추가
+        if (imageFile == null || !imageFile.exists() || imageFile.length() == 0) {
+            Log.e(TAG, "업로드할 이미지 파일이 없거나 유효하지 않습니다.");
             Toast.makeText(this, "업로드할 이미지 파일이 없습니다.", Toast.LENGTH_SHORT).show();
-            Log.e(TAG, "imageFile is null or does not exist before upload");
             return;
         }
+
+        Log.d(TAG, "서버 업로드 시작: " + imageFile.getName() + " (" + imageFile.length() + " bytes)");
 
         progressDialog = new ProgressDialog(this);
         progressDialog.setMessage("AI가 분석 중입니다...");
         progressDialog.setCancelable(false);
         progressDialog.show();
 
-        // 파일 확장자에 따라 MediaType 결정 (선택 사항, jpg로 고정해도 무방)
-        String mimeType = "image/jpeg";
-        String extension = MimeTypeMap.getFileExtensionFromUrl(imageFile.getAbsolutePath());
-        if (extension != null) {
-            mimeType = MimeTypeMap.getSingleton().getMimeTypeFromExtension(extension.toLowerCase());
-            if (mimeType == null) mimeType = "image/jpeg"; // 기본값
-        }
-
-        RequestBody requestFile = RequestBody.create(MediaType.parse(mimeType), imageFile);
+        // ❗️ 갤러리 파일 MIME 타입 추론 (필요시)
+        // MediaType.parse("image/jpeg") 대신 getContentResolver().getType(uri) 사용 가능
+        RequestBody requestFile = RequestBody.create(MediaType.parse("image/jpeg"), imageFile);
         MultipartBody.Part body = MultipartBody.Part.createFormData("file", imageFile.getName(), requestFile);
-
-        Log.d(TAG, "Uploading file: " + imageFile.getName() + ", size: " + imageFile.length() + ", type: " + mimeType); // 로그 추가
 
         RetrofitAPI apiService = RetrofitClient.getApiService();
 
@@ -257,43 +226,48 @@ public class CameraActivity extends AppCompatActivity {
 
                 if (response.isSuccessful() && response.body() != null) {
                     FoodResponse foodResponse = response.body();
+                    Log.d(TAG, "서버 분석 성공: " + foodResponse.getFoodName());
                     Toast.makeText(CameraActivity.this, "분석 결과: " + foodResponse.getFoodName(), Toast.LENGTH_SHORT).show();
-                    Log.d(TAG, "Upload successful: " + foodResponse.getFoodName());
 
+                    // ✅ 결과를 MainActivity로 전달
                     Intent intent = new Intent(CameraActivity.this, MainActivity.class);
-                    intent.putExtra("user_data", user);
+                    // ⭐️⭐️⭐️ 수정: user_data를 Intent로 넘기지 않음! ⭐️⭐️⭐️
+                    // intent.putExtra("user_data", user); // ⭐️ 이 줄 삭제! (오류 발생 지점)
                     intent.putExtra("food_response", foodResponse);
-                    // 🚨 photoUri는 카메라 촬영 URI 또는 갤러리 URI일 수 있음
-                    intent.putExtra("captured_image_uri", photoUri.toString());
+
+                    // ⭐️ photoUri가 null이 아닐 경우에만 전달 (갤러리 선택 시 photoUri가 FileProvider URI임)
+                    if (photoUri != null) {
+                        intent.putExtra("captured_image_uri", photoUri.toString());
+                    } else {
+                        // 갤러리 선택 시 썸네일로 쓸 URI가 필요하면, 갤러리 원본 uri를 전달해야 함
+                        // (현재 로직에서는 photoUri가 생성되므로 이 case는 거의 없음)
+                        Log.w(TAG, "photoUri가 null이라 MainActivity로 이미지 URI를 전달하지 못했습니다.");
+                    }
+
+                    // ⭐️ onNewIntent를 사용하기 위해 Flag 추가
+                    intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP | Intent.FLAG_ACTIVITY_SINGLE_TOP);
+
                     startActivity(intent);
-                    finish();
+                    finish(); // 현재 CameraActivity 종료
 
                 } else {
-                    String errorBody = "N/A";
+                    Log.e(TAG, "서버 응답 실패: " + response.code() + " - " + response.message());
                     try {
-                        if (response.errorBody() != null) errorBody = response.errorBody().string();
+                        Log.e(TAG, "서버 오류 바디: " + (response.errorBody() != null ? response.errorBody().string() : "null"));
                     } catch (IOException e) {
-                        Log.e(TAG, "Error reading error body", e);
+                        Log.e(TAG, "오류 바디 읽기 실패", e);
                     }
-                    Toast.makeText(CameraActivity.this, "서버 응답 실패: " + response.code() + " / " + response.message(), Toast.LENGTH_LONG).show();
-                    Log.e(TAG, "Server response error: " + response.code() + " - " + response.message() + " - Body: " + errorBody);
+                    Toast.makeText(CameraActivity.this, "서버 응답 실패: " + response.code(), Toast.LENGTH_SHORT).show();
                 }
-                // 성공/실패 여부와 관계없이 임시 파일 삭제 (선택 사항)
-                // if (imageFile != null && imageFile.exists()) {
-                //     imageFile.delete();
-                // }
             }
 
             @Override
             public void onFailure(@NonNull Call<FoodResponse> call, @NonNull Throwable t) {
                 progressDialog.dismiss();
-                Toast.makeText(CameraActivity.this, "네트워크 오류: " + t.getMessage(), Toast.LENGTH_LONG).show();
-                Log.e(TAG, "Network error during upload", t); // 상세 로그 추가
-                // 실패 시 임시 파일 삭제 (선택 사항)
-                // if (imageFile != null && imageFile.exists()) {
-                //     imageFile.delete();
-                // }
+                Log.e(TAG, "네트워크 오류: " + t.getMessage(), t);
+                Toast.makeText(CameraActivity.this, "네트워크 오류: " + t.getMessage(), Toast.LENGTH_SHORT).show();
             }
         });
     }
 }
+

@@ -1,9 +1,17 @@
 <resources xmlns:tools="http://schemas.android.com/tools">
     <!-- Base application theme. -->
-    <style name="Base.Theme.AIFoodTracker" parent="Theme.Material3.DayNight.NoActionBar">
+    <style name="Base.Theme.AIFoodTracker" parent="Theme.Material3.DayNight">
         <!-- Customize your light theme here. -->
         <!-- <item name="colorPrimary">@color/my_light_primary</item> -->
     </style>
 
     <style name="Theme.AIFoodTracker" parent="Base.Theme.AIFoodTracker" />
+
+    <!-- ⭐️ (신규) NoActionBar 테마 정의 ⭐️ -->
+    <!-- SearchFoodActivity에서 사용할, 기본 액션바(툴바)가 없는 테마 -->
+    <style name="Theme.AIFoodTracker.NoActionBar" parent="Theme.Material3.DayNight.NoActionBar">
+        <!-- 여기에 추가적인 테마 커스터마이징을 할 수 있습니다 -->
+    </style>
+
 </resources>
+

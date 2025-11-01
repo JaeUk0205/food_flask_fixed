@@ -1,0 +1,59 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical"
+    tools:context=".SearchFoodActivity">
+
+    <!-- 상단 툴바/제목 -->
+    <com.google.android.material.appbar.MaterialToolbar
+        android:id="@+id/toolbar_search"
+        android:layout_width="match_parent"
+        android:layout_height="?attr/actionBarSize"
+        android:background="?attr/colorPrimary"
+        app:title="음식 이름으로 검색"
+        app:titleTextColor="@android:color/white" />
+
+    <!-- 검색어 입력창 -->
+    <EditText
+        android:id="@+id/et_search_query"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:hint="검색할 음식 이름을 입력하세요 (2자 이상)"
+        android:inputType="text"
+        android:maxLines="1"
+        android:layout_margin="16dp"
+        android:padding="12dp"
+        android:background="@drawable/border_green_xml"/> <!-- 기존 테두리 재활용 -->
+
+    <!-- 검색 중 로딩 표시 -->
+    <ProgressBar
+        android:id="@+id/pb_search_loading"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_gravity="center_horizontal"
+        android:visibility="gone"
+        android:layout_marginTop="32dp"/>
+
+    <!-- 검색 결과가 없을 때 표시 -->
+    <TextView
+        android:id="@+id/tv_no_results"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="검색 결과가 없습니다."
+        android:layout_gravity="center_horizontal"
+        android:visibility="gone"
+        android:layout_marginTop="32dp"/>
+
+    <!-- 검색 결과 목록 -->
+    <androidx.recyclerview.widget.RecyclerView
+        android:id="@+id/rv_search_results"
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_weight="1"
+        android:padding="8dp"
+        tools:listitem="@layout/item_search_result" />
+
+</LinearLayout>

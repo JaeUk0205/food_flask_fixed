@@ -1,70 +1,48 @@
 package com.example.aifoodtracker.domain;
 
-import android.os.Parcel;
-import android.os.Parcelable; // Correct import
-import androidx.annotation.NonNull;
+import java.io.Serializable;
 
-// The interface name was misspelled. It should be 'Parcelable'.
-public class User implements Parcelable {
+// ❗️ 중요: Intent로 넘기지 않고 SharedPreferences에 저장할 것이므로
+// Parcelable 대신 Serializable을 구현 (Gson이 사용)
+public class User implements Serializable {
 
+    // 기존 필드
     private String id;
     private String gender;
     private double height;
     private double weight;
     private int targetCalories;
 
-    public User() {
-    }
+    // ⭐️ 새로 추가된 필드 ⭐️
+    private double bloodPressureSys; // 수축기 혈압
+    private double bloodPressureDia; // 이완기 혈압
+    private double bloodSugar;       // 공복 혈당
 
-    // --- Getters and Setters for all variables ---
+    // --- Getter 메소드들 ---
     public String getId() { return id; }
-    public void setId(String id) { this.id = id; }
-
     public String getGender() { return gender; }
-    public void setGender(String gender) { this.gender = gender; }
-
     public double getHeight() { return height; }
-    public void setHeight(double height) { this.height = height; }
-
     public double getWeight() { return weight; }
-    public void setWeight(double weight) { this.weight = weight; }
-
     public int getTargetCalories() { return targetCalories; }
+    public double getBloodPressureSys() { return bloodPressureSys; }
+    public double getBloodPressureDia() { return bloodPressureDia; }
+    public double getBloodSugar() { return bloodSugar; }
+
+    // --- Setter 메소드들 ---
+    public void setId(String id) { this.id = id; }
+    public void setGender(String gender) { this.gender = gender; }
+    public void setHeight(double height) { this.height = height; }
+    public void setWeight(double weight) { this.weight = weight; }
     public void setTargetCalories(int targetCalories) { this.targetCalories = targetCalories; }
 
-
-    // --- Parcelable implementation code ---
-    protected User(Parcel in) {
-        id = in.readString();
-        gender = in.readString();
-        height = in.readDouble();
-        weight = in.readDouble();
-        targetCalories = in.readInt();
+    // ⭐️ 혈압/혈당 Setter (숫자 2개 받는 버전) ⭐️
+    public void setBloodPressure(double sys, double dia) {
+        this.bloodPressureSys = sys;
+        this.bloodPressureDia = dia;
     }
 
-    public static final Creator<User> CREATOR = new Creator<User>() {
-        @Override
-        public User createFromParcel(Parcel in) {
-            return new User(in);
-        }
-
-        @Override
-        public User[] newArray(int size) {
-            return new User[size];
-        }
-    };
-
-    @Override
-    public int describeContents() {
-        return 0;
-    }
-
-    @Override
-    public void writeToParcel(@NonNull Parcel dest, int flags) {
-        dest.writeString(id);
-        dest.writeString(gender);
-        dest.writeDouble(height);
-        dest.writeDouble(weight);
-        dest.writeInt(targetCalories);
+    public void setBloodSugar(double sugar) {
+        this.bloodSugar = sugar;
     }
 }
+

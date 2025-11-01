@@ -59,5 +59,7 @@ dependencies {
 
     // Google 지도 라이브러리 (네이버 지도를 안 쓰므로 주석 처리 또는 삭제)
     // implementation("com.google.android.gms:play-services-maps:18.1.0")
+
+    implementation("com.google.code.gson:gson:2.9.0")
 }
 

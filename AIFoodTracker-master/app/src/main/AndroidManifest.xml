@@ -1,13 +1,15 @@
 <?xml version="1.0" encoding="utf-8"?>
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools">
-    <!-- 인터넷 및 위치 권한 -->
+
+    <!-- 인터넷, 위치, 카메라 권한 (기존 코드) -->
     <uses-permission android:name="android.permission.INTERNET" />
     <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" />
-    <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION" /> <!-- 카메라 기능 사용 선언 -->
-    <uses-feature
-        android:name="android.hardware.camera"
-        android:required="true" />
+    <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION" />
+    <uses-feature android:name="android.hardware.camera" android:required="true" />
+    <!-- 갤러리 접근 권한 (Android 13+ 이상은 불필요, 그 이하는 필요할 수 있음) -->
+    <!-- <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE" android:maxSdkVersion="32" /> -->
+
 
     <application
         android:allowBackup="true"
@@ -15,30 +17,24 @@
         android:fullBackupContent="@xml/backup_rules"
         android:icon="@mipmap/ic_launcher"
         android:label="@string/app_name"
-        android:networkSecurityConfig="@xml/network_security_config"
         android:roundIcon="@mipmap/ic_launcher_round"
         android:supportsRtl="true"
         android:theme="@style/Theme.AIFoodTracker"
+        android:networkSecurityConfig="@xml/network_security_config"
         tools:targetApi="31">
+
+        <!-- ⭐️ (신규) SearchFoodActivity 등록 ⭐️ -->
         <activity
-            android:name=".EditFoodActivity"
-            android:exported="false" />
-        <!-- 🚨 네이버 지도 API 키 (원래 있던 것) -->
-        <meta-data
-            android:name="com.naver.maps.map.shalrt2jh2"
-            android:value="shalrt2jh2" /> <!-- 🚨 구글 지도 API 키 삭제됨 -->
-        <!--
-        <meta-data
-            android:name="com.google.android.geo.API_KEY"
-            android:value="YOUR_GOOGLE_MAPS_API_KEY_HERE" />
-        -->
-        <!-- 앱의 화면(Activity) 선언부 -->
+            android:name=".SearchFoodActivity"
+            android:exported="false"
+            android:theme="@style/Theme.AIFoodTracker.NoActionBar" /> <!-- 툴바를 직접 만들었으므로 NoActionBar 사용 -->
+
+        <!-- 기존 액티비티들 -->
         <activity
             android:name=".InitialSurveyActivity"
             android:exported="true">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
-
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
@@ -47,10 +43,17 @@
             android:exported="false" />
         <activity
             android:name=".MainActivity"
-            android:exported="false" />
+            android:exported="false"
+            android:launchMode="singleTop" /> <!-- ⭐️ onNewIntent를 위해 singleTop 유지 -->
         <activity
             android:name=".MapActivity"
-            android:exported="false" /> <!-- FileProvider 설정 -->
+            android:exported="false" />
+        <activity
+            android:name=".EditFoodActivity"
+            android:exported="false" /> <!-- ⭐️ 수정 기능 제거했다면 이 줄 삭제 필요 -->
+
+
+        <!-- FileProvider (기존 코드) -->
         <provider
             android:name="androidx.core.content.FileProvider"
             android:authorities="${applicationId}.provider"
@@ -60,6 +63,11 @@
                 android:name="android.support.FILE_PROVIDER_PATHS"
                 android:resource="@xml/file_paths" />
         </provider>
+
+        <!-- 네이버 지도 API 키 (주석 처리) -->
+        <!-- <meta-data ... /> -->
+
     </application>
 
 </manifest>
+
