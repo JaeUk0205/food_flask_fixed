@@ -195,8 +195,7 @@
             android:textColor="@android:color/white"
             android:layout_marginStart="4dp"/>
 
-        <!-- 지도 버튼 (기능 주석 처리됨) -->
-        <!--
+
         <Button
             android:id="@+id/btn_find_route"
             android:layout_width="0dp"

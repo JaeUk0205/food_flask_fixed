@@ -54,7 +54,11 @@ dependencies {
     // implementation("com.naver.maps:map-sdk:3.21.0")
 
     // Google Play 위치 서비스 (네이버 지도를 쓰지 않아도 위치 정보는 필요할 수 있으므로 유지)
-    implementation("com.google.android.gms:play-services-location:21.0.1")
+
+    implementation ("com.google.android.gms:play-services-maps:18.2.0")
+    implementation ("com.google.android.gms:play-services-location:21.0.1")
+
+
     implementation(libs.activity)
 
     // Google 지도 라이브러리 (네이버 지도를 안 쓰므로 주석 처리 또는 삭제)

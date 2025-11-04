@@ -14,7 +14,7 @@ import android.widget.Toast;
 
 import androidx.activity.result.ActivityResultLauncher;
 import androidx.activity.result.contract.ActivityResultContracts;
-import androidx.appcompat.app.AlertDialog; // ⭐️ 경고창(AlertDialog) import
+import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
@@ -59,6 +59,7 @@ public class MainActivity extends AppCompatActivity {
     private FloatingActionButton fab_add_meal;
     private Button btn_open_camera;
     private Button btn_reset_data;
+    private Button btn_open_map; // ⭐️ 추가: 산책길 버튼
 
     // --- 데이터 변수 ---
     private User user;
@@ -112,6 +113,7 @@ public class MainActivity extends AppCompatActivity {
         fab_add_meal = findViewById(R.id.fab_add_meal);
         btn_open_camera = findViewById(R.id.btn_open_camera);
         btn_reset_data = findViewById(R.id.btn_reset_data);
+        btn_open_map = findViewById(R.id.btn_find_route); // ⭐️ 추가: 버튼 연결
     }
 
     // '음식 검색' Activity가 종료됐을 때 결과를 처리하는 부분
@@ -309,8 +311,6 @@ public class MainActivity extends AppCompatActivity {
             searchFoodLauncher.launch(intent); // Launcher로 실행
         });
 
-        // (지도 버튼은 주석 처리 유지)
-
         // 카메라 버튼
         btn_open_camera.setOnClickListener(v -> {
             if (user != null) {
@@ -319,6 +319,13 @@ public class MainActivity extends AppCompatActivity {
             } else {
                 Toast.makeText(MainActivity.this, "사용자 정보를 로드 중입니다.", Toast.LENGTH_SHORT).show();
             }
+        });
+
+        // ⭐️ 추가: 산책길 버튼 (MapActivity로 이동)
+        btn_open_map.setOnClickListener(v -> {
+            Log.e(TAG, "Map button clicked, launching MapActivity...");
+            Intent intent = new Intent(MainActivity.this, MapActivity.class);
+            startActivity(intent);
         });
 
         // 초기화 버튼
@@ -450,4 +457,3 @@ public class MainActivity extends AppCompatActivity {
         radarChart.invalidate();
     }
 }
-
