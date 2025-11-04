@@ -45,7 +45,7 @@ public class MainActivity extends AppCompatActivity {
     /** 사용자의 공복 혈당이 이 값 이상이면 '주의'로 간주 (당뇨 전단계 기준) */
     private static final double DIABETES_SUGAR_THRESHOLD = 100; // mg/dL
     /** 1회 식사의 탄수화물이 이 값을 초과하면 경고 */
-    private static final double FOOD_CARB_WARNING_THRESHOLD = 60; // g
+    private static final double FOOD_CARB_WARNING_THRESHOLD = 90; // g
     /** 1회 식사의 당류가 이 값을 초과하면 경고 */
     private static final double FOOD_SUGAR_WARNING_THRESHOLD = 25; // g
 
@@ -131,9 +131,9 @@ public class MainActivity extends AppCompatActivity {
                             mealAdapter.notifyItemInserted(0);
                             rv_meal.scrollToPosition(0);
 
-                            saveDataAndUpdateUI(); // ⭐️ 누적값 저장 및 UI 갱신
+                            saveDataAndUpdateUI(); // 누적값 저장 및 UI 갱신
 
-                            checkHealthWarning(newEntry); // ⭐️ (신규) 건강 경고 체크
+                            checkHealthWarning(newEntry); // (신규) 건강 경고 체크
                         } else {
                             Log.e(TAG, "Failed to get search result from Intent");
                         }
@@ -145,7 +145,7 @@ public class MainActivity extends AppCompatActivity {
 
     // 앱 시작 시 SharedPreferences에서 모든 데이터 로드
     private void loadInitialData() {
-        user = UserPreferenceManager.getUser(this); // ⭐️ 사용자 정보 로드 (혈당 수치 포함)
+        user = UserPreferenceManager.getUser(this); // 사용자 정보 로드 (혈당 수치 포함)
         if (user == null) {
             Toast.makeText(this, "사용자 정보를 불러올 수 없습니다. 초기 설정부터 진행해주세요.", Toast.LENGTH_LONG).show();
             finish();
@@ -200,9 +200,9 @@ public class MainActivity extends AppCompatActivity {
             mealAdapter.notifyItemInserted(0);
             rv_meal.scrollToPosition(0);
 
-            saveDataAndUpdateUI(); // ⭐️ 누적값 저장 및 UI 갱신
+            saveDataAndUpdateUI(); // 누적값 저장 및 UI 갱신
 
-            checkHealthWarning(newEntry); // ⭐️ (신규) 건강 경고 체크
+            checkHealthWarning(newEntry); // (신규) 건강 경고 체크
 
             // (중요) 처리된 Intent 데이터를 지워서 중복 추가 방지
             intent.removeExtra("food_response");
@@ -251,7 +251,7 @@ public class MainActivity extends AppCompatActivity {
                     .setMessage("회원님은 혈당 관리가 필요한 상태입니다.\n\n" +
                             "[" + newEntry.getFoodName() + "] 의 영양 정보:\n" +
                             warningMessage + "\n섭취에 유의하세요.")
-                    .setPositiveButton("확인", null) // 'null'은 그냥 팝업 닫기
+                    .setPositiveButton("확인", null) // null = 그냥 팝업 닫기
                     .setIcon(android.R.drawable.ic_dialog_alert)
                     .show();
         } else {
@@ -260,7 +260,7 @@ public class MainActivity extends AppCompatActivity {
     }
 
 
-    // --- 4. 데이터 저장 및 UI 갱신 (변경 없음) ---
+    // 4. 데이터 저장 및 UI 갱신 (변경 없음)
     private void saveDataAndUpdateUI() {
         Log.e(TAG, "saveDataAndUpdateUI called. Current mealList size: " + mealList.size());
         recalculateAccumulatedNutrition(); // 리스트 기반으로 누적값 재계산
@@ -349,7 +349,7 @@ public class MainActivity extends AppCompatActivity {
             mealAdapter.notifyDataSetChanged(); // 어댑터 갱신 (리스트가 비었음을 알림)
         }
 
-        // ⭐️ SharedPreferences에도 초기화된 값 저장!
+        // SharedPreferences에도 초기화된 값 저장!
         UserPreferenceManager.saveAccumulatedValues(this, 0, 0, 0, 0);
         UserPreferenceManager.saveMealList(this, mealList);
 

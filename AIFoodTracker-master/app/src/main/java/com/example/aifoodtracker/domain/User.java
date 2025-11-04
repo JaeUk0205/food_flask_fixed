@@ -35,7 +35,7 @@ public class User implements Serializable {
     public void setWeight(double weight) { this.weight = weight; }
     public void setTargetCalories(int targetCalories) { this.targetCalories = targetCalories; }
 
-    // ⭐️ 혈압/혈당 Setter (숫자 2개 받는 버전) ⭐️
+    //혈압/혈당 Setter
     public void setBloodPressure(double sys, double dia) {
         this.bloodPressureSys = sys;
         this.bloodPressureDia = dia;

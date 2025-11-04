@@ -10,7 +10,6 @@ from flask_cors import CORS
 
 ssl._create_default_httpserver_context = ssl._create_unverified_context
 
-# ⭐️ db에서 Nutrition 모델과 normalize_key 함수를 가져와야 함
 from classifier import classify_image
 from database import db, Nutrition, normalize_key 
 
@@ -141,7 +140,7 @@ def recommend_walks():
     # 목표 거리(km) = 칼로리 / 65 (성인 평균 1km당 65kcal)
     target_distance = round(calorie / 65, 2) if calorie > 0 else 3.0
 
-    # ✅ 내 주변 산책코스 (사용자 위치 기준 3km 반경 내 랜덤 생성)
+    # 내 주변 산책코스 (사용자 위치 기준 3km 반경 내 랜덤 생성)
     nearby_routes = []
     for i in range(5):
         offset_lat = random.uniform(-0.02, 0.02)
@@ -153,7 +152,7 @@ def recommend_walks():
             "distance": round(haversine(user_lat, user_lng, user_lat + offset_lat, user_lng + offset_lng), 2)
         })
 
-    # ✅ 유명 산책코스
+
     famous_routes = [
         {"name": "남산둘레길", "city": "서울", "lat": 37.5505, "lng": 126.9882, "distance": 7.5},
         {"name": "한강공원 코스", "city": "서울", "lat": 37.5270, "lng": 126.9326, "distance": 5.8},

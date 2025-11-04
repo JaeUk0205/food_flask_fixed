@@ -85,7 +85,7 @@
                 android:inputType="numberDecimal"/>
         </com.google.android.material.textfield.TextInputLayout>
 
-        <!-- ⭐️ 혈압 (선택) - "박스" 스타일로 변경 ⭐️ -->
+        <!--  혈압 (선택)  -->
         <com.google.android.material.textfield.TextInputLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
@@ -110,7 +110,7 @@
                 android:inputType="numberDecimal"/>
         </com.google.android.material.textfield.TextInputLayout>
 
-        <!-- ⭐️ 공복 혈당 (선택) - (원래 박스 스타일) ⭐️ -->
+        <!-- ️ 공복 혈당 (선택)  -->
         <com.google.android.material.textfield.TextInputLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"

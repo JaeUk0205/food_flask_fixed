@@ -38,7 +38,7 @@ public class InitialSurveyActivity extends AppCompatActivity {
         rg_gender = findViewById(R.id.rg_gender);
         et_height = findViewById(R.id.et_height);
         et_weight = findViewById(R.id.et_weight);
-        // ✅ 혈압/혈당 ID 연결
+        // 혈압/혈당 ID 연결
         et_blood_pressure_sys = findViewById(R.id.et_blood_pressure_sys);
         et_blood_pressure_dia = findViewById(R.id.et_blood_pressure_dia);
         et_blood_sugar = findViewById(R.id.et_blood_sugar);
@@ -70,7 +70,7 @@ public class InitialSurveyActivity extends AppCompatActivity {
                     RadioButton selectedGenderButton = findViewById(selectedGenderId);
                     String gender = selectedGenderButton.getText().toString();
 
-                    // --- 2. BMI 및 권장 칼로리 계산 ---
+                    // BMI 및 권장 칼로리 계산
                     double heightM = height / 100.0;
                     double bmi = weight / (heightM * heightM);
                     String bmiStatus;
@@ -99,7 +99,7 @@ public class InitialSurveyActivity extends AppCompatActivity {
                     }
                     int targetCalories = (int) (bmr * activityFactor);
 
-                    // --- 3. User 객체 생성 및 저장 ---
+                    // User 객체 생성 및 저장
                     user = new User();
                     user.setId(UUID.randomUUID().toString());
                     user.setGender(gender);
@@ -107,7 +107,7 @@ public class InitialSurveyActivity extends AppCompatActivity {
                     user.setWeight(weight);
                     user.setTargetCalories(targetCalories);
 
-                    // --- 4. (선택) 혈압/당 수치 값 읽기 및 User 객체에 저장 ---
+                    //  혈압/당 수치 값 읽기 및 User 객체에 저장
                     String bpSysStr = et_blood_pressure_sys.getText().toString().trim();
                     String bpDiaStr = et_blood_pressure_dia.getText().toString().trim();
                     String bloodSugarStr = et_blood_sugar.getText().toString().trim();
@@ -120,12 +120,12 @@ public class InitialSurveyActivity extends AppCompatActivity {
                     user.setBloodPressure(bpSys, bpDia);
                     user.setBloodSugar(bloodSugar);
 
-                    // --- 5. SharedPreferences에 User 저장 ---
+                    // SharedPreferences에 User 저장
                     UserPreferenceManager.saveUser(InitialSurveyActivity.this, user);
                     // 오늘의 식단/누적값 초기화
                     UserPreferenceManager.clearTodayData(InitialSurveyActivity.this);
 
-                    // --- 6. ⭐️ 결과 텍스트 생성 (BMI + 건강 상태) ⭐️ ---
+                    //  결과 텍스트 생성 (BMI + 건강 상태)
                     String goalText;
                     int color;
                     switch (goal) {
@@ -138,7 +138,7 @@ public class InitialSurveyActivity extends AppCompatActivity {
                     String bmiResultText = "현재 " + bmiStatus + " (" + String.format("%.1f", bmi) + ")\n" +
                             "목표: " + goalText + " / 권장 섭취: " + targetCalories + " kcal";
 
-                    // ⭐️ 건강 상태 판별 로직 추가 ⭐️
+                    //  건강 상태 판별 로직 추가
                     String healthStatusText = "";
                     String bpStatus = getBloodPressureStatus(bpSys, bpDia);
                     String sugarStatus = getBloodSugarStatus(bloodSugar); // 공복 혈당 기준
@@ -150,8 +150,8 @@ public class InitialSurveyActivity extends AppCompatActivity {
                         healthStatusText += "\n혈당: " + sugarStatus;
                     }
 
-                    // --- 7. 결과 표시 및 버튼 텍스트 변경 ---
-                    tv_bmi_result.setText(bmiResultText + healthStatusText); // ⭐️ 합쳐서 표시
+                    //  결과 표시 및 버튼 텍스트 변경
+                    tv_bmi_result.setText(bmiResultText + healthStatusText); //  합쳐서 표시
                     tv_bmi_result.setTextColor(color); // BMI 기준 색상 유지
                     tv_bmi_result.setVisibility(View.VISIBLE); // 결과 창 보이게
 
@@ -159,10 +159,8 @@ public class InitialSurveyActivity extends AppCompatActivity {
                     isResultShown = true;
 
                 } else {
-                    // ✅ 두 번째 클릭 → MainActivity 이동
+                    //  두 번째 클릭 → MainActivity 이동
                     Intent intent = new Intent(InitialSurveyActivity.this, MainActivity.class);
-                    // ⭐️ User 정보를 Intent로 넘기지 않음 (MainActivity가 Prefs에서 읽음)
-                    // intent.putExtra("user_data", user);
                     startActivity(intent);
                     finish();
                 }

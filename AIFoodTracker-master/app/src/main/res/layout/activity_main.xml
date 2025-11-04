@@ -212,7 +212,7 @@
     <androidx.coordinatorlayout.widget.CoordinatorLayout
         android:layout_width="match_parent"
         android:layout_height="0dp"
-        android:layout_weight="1"> <!-- ⭐️ 남은 공간을 모두 차지하도록 설정 -->
+        android:layout_weight="1"> <!-- 남은 공간을 모두 차지하도록 설정 -->
 
         <androidx.recyclerview.widget.RecyclerView
             android:id="@+id/rv_meal"

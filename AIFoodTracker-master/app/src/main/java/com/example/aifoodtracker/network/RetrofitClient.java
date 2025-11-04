@@ -8,7 +8,7 @@ import retrofit2.converter.gson.GsonConverterFactory;
 public class RetrofitClient {
 
     // ✅ Flask 서버 주소 — 에뮬레이터 기준 10.0.2.2
-    private static final String BASE_URL = "http://192.168.35.67:8000/";
+    private static final String BASE_URL = "http://10.252.129.135:8000/";
 
     private static Retrofit retrofit = null;
 

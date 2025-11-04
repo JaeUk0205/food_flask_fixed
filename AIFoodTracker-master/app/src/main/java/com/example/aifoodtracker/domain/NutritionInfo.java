@@ -36,7 +36,7 @@ public class NutritionInfo implements Serializable {
     public double getSugar() { return sugar; } // sugar getter (선택 사항)
 
 
-    // --- ⭐️ Setter 메소드들 추가 ⭐️ ---
+    // Setter 메소드들 추가
     public void setCalories(double calories) {
         this.calories = calories;
     }

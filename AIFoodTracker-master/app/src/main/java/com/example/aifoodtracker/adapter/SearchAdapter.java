@@ -20,21 +20,21 @@ public class SearchAdapter extends RecyclerView.Adapter<SearchAdapter.ViewHolder
 
     private final Context context;
     private List<FoodResponse> searchResults;
-    private OnItemClickListener listener; // ⭐️ 아이템 클릭 리스너 인터페이스
+    private OnItemClickListener listener; // 아이템 클릭 리스너 인터페이스
 
-    // ⭐️ 아이템 클릭 리스너 인터페이스 정의
+    // 아이템 클릭 리스너 인터페이스 정의
     public interface OnItemClickListener {
         void onItemClick(FoodResponse foodResponse);
     }
 
-    // ⭐️ 생성자에 리스너 추가
+    // 생성자에 리스너 추가
     public SearchAdapter(Context context, OnItemClickListener listener) {
         this.context = context;
         this.searchResults = new ArrayList<>();
         this.listener = listener;
     }
 
-    // ⭐️ 검색 결과를 업데이트하는 메소드
+    // 검색 결과를 업데이트하는 메소드
     public void updateResults(List<FoodResponse> newResults) {
         this.searchResults.clear();
         if (newResults != null) {
@@ -53,7 +53,7 @@ public class SearchAdapter extends RecyclerView.Adapter<SearchAdapter.ViewHolder
     @Override
     public void onBindViewHolder(@NonNull ViewHolder holder, int position) {
         FoodResponse entry = searchResults.get(position);
-        holder.bind(entry, listener); // ⭐️ 리스너와 함께 데이터 바인딩
+        holder.bind(entry, listener); // 리스너와 함께 데이터 바인딩
     }
 
     @Override
@@ -72,7 +72,7 @@ public class SearchAdapter extends RecyclerView.Adapter<SearchAdapter.ViewHolder
             tvNutritionSummary = itemView.findViewById(R.id.tv_search_nutrition_summary);
         }
 
-        // ⭐️ 데이터 바인딩 및 클릭 리스너 설정
+        // 데이터 바인딩 및 클릭 리스너 설정
         public void bind(final FoodResponse foodResponse, final OnItemClickListener listener) {
             tvFoodName.setText(foodResponse.getFoodName());
 
@@ -88,7 +88,7 @@ public class SearchAdapter extends RecyclerView.Adapter<SearchAdapter.ViewHolder
                 tvNutritionSummary.setText("영양 정보 없음");
             }
 
-            // ⭐️ 항목 클릭 시 리스너 호출
+            // 항목 클릭 시 리스너 호출
             itemView.setOnClickListener(v -> listener.onItemClick(foodResponse));
         }
     }
