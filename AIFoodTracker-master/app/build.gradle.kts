@@ -58,6 +58,10 @@ dependencies {
     implementation ("com.google.android.gms:play-services-maps:18.2.0")
     implementation ("com.google.android.gms:play-services-location:21.0.1")
 
+    // Maps 유틸리티 라이브러리를 추가합니다.
+    implementation("com.google.maps.android:android-maps-utils:2.2.0")
+
+
 
     implementation(libs.activity)
 

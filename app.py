@@ -1,7 +1,8 @@
-# app.py (AI 음식 분석 + BMI + 산책길 추천 + ⭐️음식 검색 API)
+# app.py (AI 음식 분석 + BMI + 산책길 추천 + ⭐️음식 검색 API + ✅Google Places/Directions)
 import os
 import ssl
 import random
+import requests
 from uuid import uuid4
 from math import radians, cos, sin, asin, sqrt
 from flask import Flask, request, jsonify, send_from_directory, url_for
@@ -11,8 +12,11 @@ from flask_cors import CORS
 ssl._create_default_httpserver_context = ssl._create_unverified_context
 
 from classifier import classify_image
-from database import db, Nutrition, normalize_key 
+from database import db, Nutrition, normalize_key
 
+# --------------------------
+# 설정 & 상수
+# --------------------------
 RISK_THRESHOLDS = {"calories": 600, "sugar": 20}
 
 BASE_DIR = os.path.abspath(os.path.dirname(__file__))
@@ -22,6 +26,11 @@ ALLOWED_MIME = {"image/jpeg", "image/png", "image/webp"}
 MAX_MB = 10
 ALIASES = {"bibimbap": "비빔밥", "kimchi": "김치", "ramen": "라면"}
 
+GOOGLE_API_KEY = os.getenv("GOOGLE_API_KEY")  # ✅ .env 또는 환경변수에 넣어두기
+
+# --------------------------
+# Flask 초기화
+# --------------------------
 app = Flask(__name__)
 CORS(app)
 app.config['JSON_AS_ASCII'] = False  # ✅ 한글 깨짐 방지
@@ -29,6 +38,18 @@ app.config["SQLALCHEMY_DATABASE_URI"] = "sqlite:///" + os.path.join(BASE_DIR, "f
 app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = False
 app.config["MAX_CONTENT_LENGTH"] = MAX_MB * 1024 * 1024
 db.init_app(app)
+
+# --------------------------
+# 유틸
+# --------------------------
+def haversine(lat1, lon1, lat2, lon2):
+    """두 좌표 간 거리(km)"""
+    R = 6371
+    d_lat = radians(lat2 - lat1)
+    d_lon = radians(lon2 - lon1)
+    a = sin(d_lat / 2)**2 + cos(radians(lat1)) * cos(radians(lat2)) * sin(d_lon / 2)**2
+    return R * 2 * asin(sqrt(a))
+
 
 # --------------------------
 # 업로드된 이미지 파일 제공
@@ -101,14 +122,14 @@ def calculate_bmi():
             return jsonify({"error": "gender must be 'male' or 'female'"}), 400
         if height_cm <= 0 or weight_kg <= 0:
             return jsonify({"error": "height and weight must be positive values"}), 400
-        
+
         height_m = height_cm / 100
         bmi = weight_kg / (height_m ** 2)
         if bmi < 18.5: status = "저체중"
         elif 18.5 <= bmi < 23: status = "정상 체중"
         elif 23 <= bmi < 25: status = "과체중"
         else: status = "비만"
-        
+
         gender_text = "남성" if gender == "male" else "여성"
         message = f"{gender_text} 기준, {status}입니다."
         response_data = {"bmi": round(bmi, 2), "status": status, "message": message}
@@ -118,16 +139,8 @@ def calculate_bmi():
 
 
 # --------------------------
-# 3️⃣ 산책길 추천 (현재 위치 + 칼로리 기반)
+# 3️⃣ 산책길 추천 (랜덤 근처 + 유명 코스)  ← 기존 엔드포인트 유지
 # --------------------------
-def haversine(lat1, lon1, lat2, lon2):
-    R = 6371
-    d_lat = radians(lat2 - lat1)
-    d_lon = radians(lon2 - lon1)
-    a = sin(d_lat / 2)**2 + cos(radians(lat1)) * cos(radians(lat2)) * sin(d_lon / 2)**2
-    return R * 2 * asin(sqrt(a))
-
-
 @app.route("/v1/walks", methods=["GET"])
 def recommend_walks():
     try:
@@ -152,7 +165,6 @@ def recommend_walks():
             "distance": round(haversine(user_lat, user_lng, user_lat + offset_lat, user_lng + offset_lng), 2)
         })
 
-
     famous_routes = [
         {"name": "남산둘레길", "city": "서울", "lat": 37.5505, "lng": 126.9882, "distance": 7.5},
         {"name": "한강공원 코스", "city": "서울", "lat": 37.5270, "lng": 126.9326, "distance": 5.8},
@@ -170,27 +182,139 @@ def recommend_walks():
 
 
 # --------------------------
-# ⭐️ 4️⃣ (신규) 음식 이름 검색 API ⭐️
+# ✅ 3-1) 실제 Google Places 기반 "주변 산책 장소" API (신규)
+# --------------------------
+@app.route("/v1/walkspots", methods=["GET"])
+def get_walkspots():
+    """
+    쿼리: ?lat=..&lng=..&radius=1500&limit=10&keyword=공원
+    반환: [{name, lat, lng, address, rating, userRatingsTotal, distance_m, place_id}, ...]
+    """
+    if not GOOGLE_API_KEY:
+        return jsonify({"error": "GOOGLE_API_KEY not set"}), 500
+
+    try:
+        lat = float(request.args.get("lat"))
+        lng = float(request.args.get("lng"))
+    except (TypeError, ValueError):
+        return jsonify({"error": "lat/lng required"}), 400
+
+    radius = int(request.args.get("radius", 1500))
+    limit = int(request.args.get("limit", 10))
+    keyword = request.args.get("keyword", "공원 OR 산책로 OR 둘레길 OR 하천")
+
+    url = "https://maps.googleapis.com/maps/api/place/nearbysearch/json"
+    params = {
+        "location": f"{lat},{lng}",
+        "radius": radius,
+        "keyword": keyword,
+        "key": GOOGLE_API_KEY,
+        "language": "ko"
+    }
+
+    try:
+        res = requests.get(url, params=params, timeout=7)
+        data = res.json()
+    except Exception as e:
+        return jsonify({"error": f"Places request failed: {e}"}), 502
+
+    if res.status_code != 200:
+        return jsonify({"error": f"Places API HTTP {res.status_code}", "detail": data}), 502
+
+    results = []
+    for place in data.get("results", []):
+        plat = place["geometry"]["location"]["lat"]
+        plng = place["geometry"]["location"]["lng"]
+        results.append({
+            "name": place.get("name"),
+            "lat": plat,
+            "lng": plng,
+            "address": place.get("vicinity", ""),
+            "rating": place.get("rating", 0),
+            "userRatingsTotal": place.get("user_ratings_total", 0),
+            "distance_m": round(haversine(lat, lng, plat, plng) * 1000),
+            "place_id": place.get("place_id")
+        })
+
+    # 거리 오름차순, 평점 많은 곳 우선 정렬
+    results.sort(key=lambda x: (x["distance_m"], -(x["rating"] or 0), -(x["userRatingsTotal"] or 0)))
+    return jsonify(results[:limit]), 200
+
+
+# --------------------------
+# ✅ 3-2) Google Directions 기반 "보행자 경로" API (신규)
+# --------------------------
+@app.route("/v1/route", methods=["GET"])
+def get_route():
+    """
+    쿼리: ?start_lat=..&start_lng=..&end_lat=..&end_lng=..&mode=walking
+    반환: {polyline, distance_m, duration_s}
+    """
+    if not GOOGLE_API_KEY:
+        return jsonify({"error": "GOOGLE_API_KEY not set"}), 500
+
+    try:
+        start_lat = float(request.args.get("start_lat"))
+        start_lng = float(request.args.get("start_lng"))
+        end_lat = float(request.args.get("end_lat"))
+        end_lng = float(request.args.get("end_lng"))
+    except (TypeError, ValueError):
+        return jsonify({"error": "start_lat/start_lng/end_lat/end_lng required"}), 400
+
+    mode = request.args.get("mode", "walking")  # walking, bicycling, driving, transit
+    url = "https://maps.googleapis.com/maps/api/directions/json"
+    params = {
+        "origin": f"{start_lat},{start_lng}",
+        "destination": f"{end_lat},{end_lng}",
+        "mode": mode,
+        "key": GOOGLE_API_KEY,
+        "language": "ko"
+    }
+
+    try:
+        res = requests.get(url, params=params, timeout=10)
+        data = res.json()
+    except Exception as e:
+        return jsonify({"error": f"Directions request failed: {e}"}), 502
+
+    if res.status_code != 200:
+        return jsonify({"error": f"Directions API HTTP {res.status_code}", "detail": data}), 502
+
+    routes = data.get("routes", [])
+    if not routes:
+        return jsonify({"error": "No route found", "detail": data.get("status")}), 404
+
+    route0 = routes[0]
+    leg0 = route0.get("legs", [{}])[0]
+    overview_polyline = route0.get("overview_polyline", {}).get("points", "")
+
+    distance_m = leg0.get("distance", {}).get("value")
+    duration_s = leg0.get("duration", {}).get("value")
+
+    return jsonify({
+        "polyline": overview_polyline,   # Android에서 PolyUtil.decode()로 디코딩
+        "distance_m": distance_m,
+        "duration_s": duration_s,
+        "mode": mode
+    }), 200
+
+
+# --------------------------
+# ⭐️ 4️⃣ (신규) 음식 이름 검색 API
 # --------------------------
 @app.route("/v1/search_food", methods=["GET"])
 def search_food_by_name():
-    # 1. URL에서 'name' 파라미터(검색어) 가져오기
     query_name = request.args.get("name", "").strip()
-    
-    # 2. 검색어가 2글자 미만이면 빈 리스트 반환 (DB 부하 방지)
+
     if len(query_name) < 2:
-        return jsonify([]), 200 # 200 OK, but empty list
+        return jsonify([]), 200
 
     try:
-        # 3. DB에서 검색어를 정규화(normalize_key)해서 검색
         search_key = normalize_key(query_name)
-        # 'LIKE' 쿼리로 이름의 일부가 일치하는 항목 검색, 최대 10개
         food_items = Nutrition.query.filter(Nutrition.name_key.like(f"%{search_key}%")).limit(10).all()
 
         results = []
-        # 4. 검색 결과를 앱에서 사용하던 FoodResponse 형식과 유사하게 가공
         for nut in food_items:
-            # AI 분석 결과와 동일한 형식으로 NutritionInfo 구성
             nutrition_info = {
                 "calories": float(nut.kcal) if nut and nut.kcal is not None else 0.0,
                 "carbohydrate": float(nut.carbs_g) if nut and nut.carbs_g is not None else 0.0,
@@ -199,21 +323,18 @@ def search_food_by_name():
                 "sugar": float(nut.sugar_g) if nut and nut.sugar_g is not None else 0.0,
             }
 
-            # AI 분석 결과(FoodResponse)와 동일한 형식으로 응답 구성
-            response_data = {
-                "foodName": nut.name, # DB에 저장된 원본 이름
-                "confidence": 1.0,    # 수동 검색이므로 신뢰도 100%
-                "imageUrl": None,     # 수동 추가이므로 이미지는 없음
+            results.append({
+                "foodName": nut.name,
+                "confidence": 1.0,
+                "imageUrl": None,
                 "nutritionInfo": nutrition_info,
-                "riskInfo": None      # 수동 추가 시 위험 정보는 계산하지 않음
-            }
-            results.append(response_data)
-        
-        # 5. 검색 결과 리스트를 JSON으로 반환
+                "riskInfo": None
+            })
+
         return jsonify(results), 200
 
     except Exception as e:
-        app.logger.error(f"Database search failed: {e}") # ⭐️ 서버 로그에 오류 기록
+        app.logger.error(f"Database search failed: {e}")
         return jsonify({"error": f"Database search failed: {e}"}), 500
 
 
@@ -222,7 +343,6 @@ def search_food_by_name():
 # --------------------------
 @app.route("/test.html")
 def serve_test_html():
-    # 현재 폴더(BASE_DIR)에서 test.html 파일을 찾아서 보내줌
     return send_from_directory(BASE_DIR, "test.html")
 
 
@@ -230,5 +350,6 @@ def serve_test_html():
 # 서버 실행
 # --------------------------
 if __name__ == "__main__":
-    app.run(host="0.0.0.0", port=8000, debug=True)
-
+    # 기본 포트 8000 그대로 두되, 환경변수 PORT가 있으면 그걸 사용
+    port = int(os.getenv("PORT", "8000"))
+    app.run(host="0.0.0.0", port=port, debug=True)
