@@ -60,7 +60,7 @@ public class MapActivity extends FragmentActivity implements OnMapReadyCallback 
 
         // ✅ Retrofit 연결 설정
         Retrofit retrofit = new Retrofit.Builder()
-                .baseUrl("http://10.35.146.135:8000/") // 에뮬레이터 기준 Flask 주소
+                .baseUrl("http://192.168.35.113:8000/") // 에뮬레이터 기준 Flask 주소
                 .addConverterFactory(GsonConverterFactory.create())
                 .build();
 

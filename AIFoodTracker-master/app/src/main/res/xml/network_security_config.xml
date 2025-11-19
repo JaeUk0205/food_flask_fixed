@@ -9,6 +9,6 @@
 
     <!-- ✅ 로컬 Flask 서버(10.0.2.2) 통신 허용 -->
     <domain-config cleartextTrafficPermitted="true">
-        <domain includeSubdomains="true">10.35.146.135</domain>
+        <domain includeSubdomains="true">192.168.35.113</domain>
     </domain-config>
 </network-security-config>
