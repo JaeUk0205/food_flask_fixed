@@ -58,7 +58,12 @@ public class CameraActivity extends AppCompatActivity {
             isSuccess -> {
                 if (isSuccess && photoUri != null) {
                     Glide.with(this).load(photoUri).into(iv_preview);
-                    imageFile = new File(photoUri.getPath()); // photoUri로부터 File 객체 생성 (경로 확인 필요)
+
+                    // ⭐️⭐️⭐️ 수정된 부분 ⭐️⭐️⭐️
+                    // 아래 라인을 삭제했습니다.
+                    // imageFile = new File(photoUri.getPath());
+                    // imageFile은 dispatchTakePictureIntent()에서 이미 생성된 파일을 참조합니다.
+
                     Toast.makeText(this, "사진 촬영 성공! 서버로 업로드합니다.", Toast.LENGTH_SHORT).show();
                     uploadImageToServer();
                 } else {
@@ -270,4 +275,3 @@ public class CameraActivity extends AppCompatActivity {
         });
     }
 }
-
